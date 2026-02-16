@@ -1,0 +1,305 @@
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap');
+
+/* OpenDyslexic CDN */
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('./assets/fonts/OpenDyslexic-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('./assets/fonts/OpenDyslexic-Bold.otf') format('opentype');
+  font-weight: bold;
+}
+
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('./assets/fonts/OpenDyslexic-Italic.otf') format('opentype');
+  font-style: italic;
+}
+
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Calming base palette - soft blues and greens */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Calming teal primary */
+    --primary: 175 60% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Soft sage secondary */
+    --secondary: 150 20% 92%;
+    --secondary-foreground: 175 60% 25%;
+
+    --muted: 210 30% 96%;
+    --muted-foreground: 220 15% 45%;
+
+    /* Warm accent for highlights */
+    --accent: 35 90% 60%;
+    --accent-foreground: 35 90% 20%;
+
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 25% 90%;
+    --input: 210 25% 90%;
+    --ring: 175 60% 40%;
+
+    --radius: 1rem;
+
+    /* Mode-specific colors */
+    --adhd-primary: 15 85% 55%;
+    --adhd-secondary: 35 95% 65%;
+    --adhd-glow: 15 85% 55%;
+    
+    --autism-primary: 200 25% 50%;
+    --autism-secondary: 180 15% 85%;
+    --autism-muted: 200 10% 92%;
+    
+    --dyslexia-primary: 45 80% 50%;
+    --dyslexia-secondary: 45 60% 90%;
+    --dyslexia-text: 222 47% 11%;
+
+    /* Gradients */
+    --gradient-calm: linear-gradient(135deg, hsl(175 60% 40%), hsl(200 50% 50%));
+    --gradient-adhd: linear-gradient(135deg, hsl(15 85% 55%), hsl(35 95% 65%));
+    --gradient-autism: linear-gradient(135deg, hsl(200 25% 50%), hsl(180 15% 60%));
+    --gradient-dyslexia: linear-gradient(135deg, hsl(45 80% 50%), hsl(35 70% 60%));
+    --gradient-hero: linear-gradient(180deg, hsl(210 40% 98%) 0%, hsl(175 40% 95%) 100%);
+
+    /* Success colors */
+    --success: 150 60% 45%;
+    --success-foreground: 0 0% 100%;
+
+    /* Sidebar */
+    --sidebar-background: 175 30% 97%;
+    --sidebar-foreground: 222 47% 20%;
+    --sidebar-primary: 175 60% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 175 40% 92%;
+    --sidebar-accent-foreground: 175 60% 25%;
+    --sidebar-border: 175 20% 88%;
+    --sidebar-ring: 175 60% 40%;
+
+    /* Typography */
+    --font-sans: 'Lexend', system-ui, sans-serif;
+    --line-height-relaxed: 1.8;
+    --letter-spacing-wide: 0.02em;
+  }
+
+  .dark {
+    --background: 222 47% 8%;
+    --foreground: 210 40% 96%;
+
+    --card: 222 47% 12%;
+    --card-foreground: 210 40% 96%;
+
+    --popover: 222 47% 12%;
+    --popover-foreground: 210 40% 96%;
+
+    --primary: 175 60% 50%;
+    --primary-foreground: 222 47% 8%;
+
+    --secondary: 175 20% 18%;
+    --secondary-foreground: 175 40% 80%;
+
+    --muted: 220 30% 18%;
+    --muted-foreground: 220 15% 60%;
+
+    --accent: 35 80% 55%;
+    --accent-foreground: 35 95% 95%;
+
+    --destructive: 0 55% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 25% 20%;
+    --input: 220 25% 20%;
+    --ring: 175 60% 50%;
+
+    --sidebar-background: 222 47% 10%;
+    --sidebar-foreground: 210 40% 90%;
+    --sidebar-primary: 175 60% 50%;
+    --sidebar-primary-foreground: 222 47% 8%;
+    --sidebar-accent: 175 30% 18%;
+    --sidebar-accent-foreground: 175 40% 80%;
+    --sidebar-border: 220 25% 18%;
+    --sidebar-ring: 175 60% 50%;
+  }
+
+  /* High contrast mode */
+  .high-contrast {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 95%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 20%;
+    --border: 0 0% 0%;
+  }
+
+  /* ADHD Mode styling */
+  .mode-adhd {
+    --primary: 15 85% 55%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 35 95% 65%;
+    --ring: 15 85% 55%;
+  }
+
+  /* Autism Mode styling */
+  .mode-autism {
+    --primary: 200 25% 50%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 180 15% 85%;
+    --muted: 200 10% 92%;
+  }
+
+  /* Dyslexia Mode styling */
+  .mode-dyslexia {
+    --primary: 45 80% 50%;
+    --primary-foreground: 0 0% 0%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: var(--font-sans);
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+    line-height: var(--line-height-relaxed);
+    letter-spacing: var(--letter-spacing-wide);
+  }
+
+  /* Dyslexia-friendly text */
+  .dyslexia-text {
+    line-height: 2;
+    letter-spacing: 0.05em;
+    word-spacing: 0.1em;
+  }
+
+  /* Focus visible styles for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer components {
+  /* Gradient backgrounds */
+  .bg-gradient-calm {
+    background: var(--gradient-calm);
+  }
+
+  .bg-gradient-adhd {
+    background: var(--gradient-adhd);
+  }
+
+  .bg-gradient-autism {
+    background: var(--gradient-autism);
+  }
+
+  .bg-gradient-dyslexia {
+    background: var(--gradient-dyslexia);
+  }
+
+  .bg-gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  /* Card with hover effect */
+  .card-interactive {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+
+  /* Large action button */
+  .btn-action {
+    @apply text-xl font-semibold py-6 px-10 rounded-2xl shadow-lg transition-all duration-300;
+  }
+
+  .btn-action:hover {
+    @apply shadow-xl -translate-y-1;
+  }
+
+  /* Zen mode hidden elements */
+  .zen-hidden {
+    @apply opacity-0 pointer-events-none transition-opacity duration-500;
+  }
+
+  /* Pulse animation for ADHD timer */
+  .pulse-gentle {
+    animation: pulse-gentle 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-gentle {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.02);
+      opacity: 0.9;
+    }
+  }
+
+  /* Progress bar glow for ADHD */
+  .progress-glow {
+    box-shadow: 0 0 20px hsl(var(--adhd-primary) / 0.5);
+  }
+}
+
+@layer utilities {
+  /* Font size utilities for accessibility */
+  .text-size-sm {
+    font-size: 0.875rem;
+  }
+
+  .text-size-base {
+    font-size: 1rem;
+  }
+
+  .text-size-lg {
+    font-size: 1.125rem;
+  }
+
+  .text-size-xl {
+    font-size: 1.25rem;
+  }
+
+  .text-size-2xl {
+    font-size: 1.5rem;
+  }
+
+  /* Spacing for dyslexia-friendly reading */
+  .spacing-relaxed {
+    line-height: 2;
+    letter-spacing: 0.03em;
+    word-spacing: 0.1em;
+  }
+
+  /* Smooth scroll */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+}
