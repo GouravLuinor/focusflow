@@ -1,22 +1,37 @@
-from dotenv import load_dotenv
 import os
-import time
+from dotenv import load_dotenv
 from google import genai
-from typer import prompt   #
-from typer import prompt   #
 
-load_dotenv() 
+load_dotenv()
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-if not GEMINI_API_KEY:
-    raise RuntimeError("❌ GEMINI_API_KEY is not set in environment variables")
+def _get_ai_client():
+    """Lazily initialize Gemini client. Returns None if not configured."""
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        return None
+    return genai.Client(api_key=api_key)
 
-client = genai.Client(api_key=GEMINI_API_KEY)
 
-def generate_ai_steps(title: str, support_mode: str = "adhd"):
+def _get_fallback_steps(title: str) -> list[str]:
+    """Return generic fallback steps when AI is unavailable."""
+    return [
+        f"Define the goal of '{title}' clearly",
+        "Identify 3 small achievable actions",
+        "Start with the simplest one",
+        "Work in a focused time block",
+        "Review and adjust progress"
+    ]
 
-    prompt = f"""
+
+def generate_ai_steps(title: str, support_mode: str = "adhd") -> list[str]:
+    client = _get_ai_client()
+    
+    if client is None:
+        print(f"Gemini not configured. Using fallback steps for task '{title}'.")
+        return _get_fallback_steps(title)
+    
+    decomposition_prompt = f"""
     Break the task "{title}" into exactly 5 short actionable steps.
 
     Rules:
@@ -34,12 +49,11 @@ def generate_ai_steps(title: str, support_mode: str = "adhd"):
 
     try:
         response = client.models.generate_content(
-                    model="gemini-2.0-flash", 
-                    contents=prompt,       
-                )
+            model="gemini-2.0-flash",
+            contents=decomposition_prompt,
+        )
 
         text = response.text.strip()
-
         lines = text.split("\n")
         steps = []
 
@@ -52,16 +66,9 @@ def generate_ai_steps(title: str, support_mode: str = "adhd"):
         return steps[:5]
 
     except Exception as e:
-        if "429" in str(e):
-            print("Quota hit! Waiting 60s...")
-            time.sleep(60)
-
-        return [
-            f"Define the goal of '{title}' clearly",
-            "Identify 3 small achievable actions",
-            "Start with the simplest one",
-            "Work in a focused time block",
-            "Review and adjust progress"
-        ]
-
-
+        error_str = str(e)
+        if "429" in error_str:
+            print(f"Gemini API quota exceeded for task '{title}'. Using fallback.")
+        else:
+            print(f"Gemini API error for task '{title}': {error_str[:200]}. Using fallback.")
+        return _get_fallback_steps(title)
