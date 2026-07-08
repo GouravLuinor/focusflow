@@ -27,6 +27,7 @@ from app.models.task import Task
 from app.models.step import Step
 from app.models.goal import Goal
 from app.models.task_dependency import TaskDependency
+from app.models.schedule_block import ScheduleBlock
 
 target_metadata = Base.metadata
 

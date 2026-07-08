@@ -17,3 +17,6 @@ class User(Base):
         uselist=False,
         cascade="all, delete"
     )
+
+    goals = relationship("Goal", back_populates="user", cascade="all, delete-orphan")
+    schedule_blocks = relationship("ScheduleBlock", back_populates="user", cascade="all, delete-orphan")

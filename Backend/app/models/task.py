@@ -45,4 +45,7 @@ class Task(Base):
         cascade="all, delete-orphan"
     )
 
+    postponement_count = Column(Integer, default=0)
+    schedule_blocks = relationship("ScheduleBlock", back_populates="task", cascade="all, delete-orphan")
+
 

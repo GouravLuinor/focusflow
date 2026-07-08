@@ -29,6 +29,7 @@ class TaskResponse(BaseModel):
     goal_id: Optional[int] = None
     parent_task_id: Optional[int] = None
     subtasks: List["TaskResponse"] = []
+    postponement_count: int = 0
 
     class Config:
         from_attributes = True
@@ -54,3 +55,4 @@ class TaskUpdate(BaseModel):
     is_completed: Optional[bool] = None
     goal_id: Optional[int] = None
     parent_task_id: Optional[int] = None
+    postponement_count: Optional[int] = None

@@ -10,6 +10,7 @@ from app.api.step import router as step_router
 from app.api.ai import router as ai_router
 from app.api.goal import router as goal_router
 from app.api.dependency import router as dependency_router
+from app.api.schedule import router as schedule_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
@@ -42,6 +43,7 @@ app.include_router(step_router)
 app.include_router(ai_router)
 app.include_router(goal_router)
 app.include_router(dependency_router)
+app.include_router(schedule_router)
 
 # DO NOT put /api/ prefixes here if they are already in the auth.py file!
 
