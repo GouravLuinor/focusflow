@@ -20,3 +20,5 @@ class User(Base):
 
     goals = relationship("Goal", back_populates="user", cascade="all, delete-orphan")
     schedule_blocks = relationship("ScheduleBlock", back_populates="user", cascade="all, delete-orphan")
+    execution_sessions = relationship("ExecutionSession", back_populates="user", cascade="all, delete-orphan")
+    task_events = relationship("TaskEvent", back_populates="user", cascade="all, delete-orphan")

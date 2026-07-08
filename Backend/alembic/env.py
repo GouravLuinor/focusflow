@@ -28,6 +28,8 @@ from app.models.step import Step
 from app.models.goal import Goal
 from app.models.task_dependency import TaskDependency
 from app.models.schedule_block import ScheduleBlock
+from app.models.execution_session import ExecutionSession
+from app.models.task_event import TaskEvent
 
 target_metadata = Base.metadata
 
