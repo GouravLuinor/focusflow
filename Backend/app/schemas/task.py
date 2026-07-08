@@ -26,6 +26,9 @@ class TaskResponse(BaseModel):
     description: str
     is_completed: bool
     steps: List[StepResponse] = []
+    goal_id: Optional[int] = None
+    parent_task_id: Optional[int] = None
+    subtasks: List["TaskResponse"] = []
 
     class Config:
         from_attributes = True
@@ -37,6 +40,8 @@ class TaskResponse(BaseModel):
 class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
+    goal_id: Optional[int] = None
+    parent_task_id: Optional[int] = None
 
 
 # -------------------------
@@ -47,3 +52,5 @@ class TaskUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     is_completed: Optional[bool] = None
+    goal_id: Optional[int] = None
+    parent_task_id: Optional[int] = None

@@ -1,6 +1,9 @@
+from typing import Optional
 from sqlalchemy.orm import Session
+from fastapi import HTTPException
 from app.models.task import Task
 from app.models.step import Step
+from app.models.goal import Goal
 from app.services.ai_service import generate_ai_steps
 
 
@@ -10,12 +13,26 @@ def create_task_with_ai(
     title: str,
     description: str,
     support_mode: str,
+    goal_id: Optional[int] = None,
+    parent_task_id: Optional[int] = None,
 ):
+    if goal_id:
+        goal = db.query(Goal).filter(Goal.id == goal_id, Goal.user_id == user_id).first()
+        if not goal:
+            raise HTTPException(status_code=404, detail="Goal not found")
+        
+    if parent_task_id:
+        parent = db.query(Task).filter(Task.id == parent_task_id, Task.user_id == user_id).first()
+        if not parent:
+            raise HTTPException(status_code=404, detail="Parent task not found")
+
     # 1️⃣ Create task
     task = Task(
         title=title,
         description=description,
-        user_id=user_id
+        user_id=user_id,
+        goal_id=goal_id,
+        parent_task_id=parent_task_id
     )
 
     db.add(task)

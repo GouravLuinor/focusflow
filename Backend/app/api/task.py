@@ -1,8 +1,10 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.user import User
 from app.services.task_service import create_task_with_ai
+from app.services import dependency_service
 from app.db.deps import get_db
 from app.core.auth import get_current_user
 from app.models.task import Task
@@ -26,6 +28,8 @@ def create_task(
         title=data.title,
         description=data.description,
         support_mode=support_mode,
+        goal_id=data.goal_id,
+        parent_task_id=data.parent_task_id,
     )
 
 
@@ -33,16 +37,30 @@ def create_task(
 @router.get("/", response_model=list[TaskResponse])
 @router.get("", response_model=list[TaskResponse])
 def get_tasks(
+    goal_id: Optional[int] = None,
     db: Session = Depends(get_db),
     user=Depends(get_current_user),
 ):
-    tasks = (
+    query = (
         db.query(Task)
         .options(joinedload(Task.steps))
         .filter(Task.user_id == user.id)
-        .all()
     )
+    if goal_id is not None:
+        query = query.filter(Task.goal_id == goal_id)
+        
+    tasks = query.all()
     return tasks
+
+
+# 🔹 Get Executable Tasks
+@router.get("/executable", response_model=list[TaskResponse])
+def get_executable_tasks(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get all tasks that are currently executable (dependencies met)."""
+    return dependency_service.get_executable_tasks_for_user(db, current_user.id)
 
 
 # 🔹 Update Task
@@ -95,3 +113,14 @@ def delete_task(
     db.commit()
 
     return {"message": "Task deleted"}
+
+
+# 🔹 Get Blocking Tasks
+@router.get("/{task_id}/blocking", response_model=list[TaskResponse])
+def get_blocking_tasks(
+    task_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get tasks that are blocking this task from being executable."""
+    return dependency_service.get_blocking_tasks_for_task(db, task_id, current_user.id)
