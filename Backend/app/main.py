@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.api.profile import router as profile_router
-from app.db.session import engine
+from app.db.session import engine, DATABASE_URL
 from app.db.base import Base
 from app.api.auth import router as auth_router
 from app.api.task import router as task_router
@@ -14,8 +14,9 @@ from pathlib import Path
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # This ensures your tables are created in dev.db on startup
-    Base.metadata.create_all(bind=engine)
+    # This ensures your tables are created in dev.db on startup (only for SQLite)
+    if "sqlite" in DATABASE_URL:
+        Base.metadata.create_all(bind=engine)
     yield
 
 app = FastAPI(title="FocusFlow Backend", lifespan=lifespan)
