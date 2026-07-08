@@ -7,3 +7,4 @@ from app.models.task_dependency import TaskDependency
 from app.models.schedule_block import ScheduleBlock
 from app.models.execution_session import ExecutionSession
 from app.models.task_event import TaskEvent
+from app.models.ai_job import AIJob

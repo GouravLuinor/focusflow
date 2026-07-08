@@ -19,3 +19,4 @@ class Goal(Base):
     # Relationships
     user = relationship("User", back_populates="goals")
     tasks = relationship("Task", back_populates="goal", cascade="all, delete-orphan")
+    ai_jobs = relationship("AIJob", back_populates="goal", cascade="all, delete-orphan")
