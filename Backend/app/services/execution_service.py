@@ -5,6 +5,7 @@ from app.models.execution_session import ExecutionSession
 from app.models.task import Task
 from app.schemas.execution import ExecutionSessionCreate, ExecutionSessionUpdate
 from app.services.event_service import log_event
+from app.engine.state_machine import transition_task_status
 
 
 def start_session(db: Session, user_id: int, data: ExecutionSessionCreate):
@@ -23,6 +24,12 @@ def start_session(db: Session, user_id: int, data: ExecutionSessionCreate):
     if active:
         raise HTTPException(status_code=409, detail="Task already has an active session")
     
+    # Enforce task status transition to IN_PROGRESS
+    if task.status in ["TODO", "PAUSED"]:
+        success, msg = transition_task_status(task, "IN_PROGRESS")
+        if not success:
+            raise HTTPException(status_code=422, detail=msg)
+    
     session = ExecutionSession(
         task_id=data.task_id,
         user_id=user_id,
@@ -33,10 +40,6 @@ def start_session(db: Session, user_id: int, data: ExecutionSessionCreate):
     
     # Log event
     log_event(db, data.task_id, user_id, "TASK_STARTED")
-    
-    # Update task status if needed
-    if hasattr(task, "status") and task.status == "TODO":
-        task.status = "IN_PROGRESS"
     
     db.commit()
     db.refresh(session)
@@ -55,6 +58,13 @@ def complete_session(db: Session, session_id: int, user_id: int):
     if session.status != "ACTIVE":
         raise HTTPException(status_code=422, detail="Only active sessions can be completed")
     
+    # Enforce task status transition to COMPLETED
+    task = db.query(Task).filter(Task.id == session.task_id).first()
+    if task:
+        success, msg = transition_task_status(task, "COMPLETED")
+        if not success:
+            raise HTTPException(status_code=422, detail=msg)
+            
     now = datetime.utcnow()
     session.ended_at = now
     session.duration_seconds = int((now - session.started_at).total_seconds())
@@ -80,6 +90,13 @@ def abandon_session(db: Session, session_id: int, user_id: int):
     if session.status != "ACTIVE":
         raise HTTPException(status_code=422, detail="Only active sessions can be abandoned")
     
+    # Enforce task status transition to PAUSED
+    task = db.query(Task).filter(Task.id == session.task_id).first()
+    if task:
+        success, msg = transition_task_status(task, "PAUSED")
+        if not success:
+            raise HTTPException(status_code=422, detail=msg)
+            
     now = datetime.utcnow()
     session.ended_at = now
     session.duration_seconds = int((now - session.started_at).total_seconds())

@@ -50,4 +50,27 @@ class Task(Base):
     execution_sessions = relationship("ExecutionSession", back_populates="task", cascade="all, delete-orphan")
     events = relationship("TaskEvent", back_populates="task", cascade="all, delete-orphan")
 
+    @property
+    def status(self) -> str:
+        if self.is_completed:
+            return "COMPLETED"
+        active = next((s for s in self.execution_sessions if s.status == "ACTIVE"), None)
+        if active:
+            return "IN_PROGRESS"
+        if self.events:
+            sorted_events = sorted(self.events, key=lambda e: e.created_at, reverse=True)
+            if sorted_events and sorted_events[0].event_type == "TASK_CANCELLED":
+                return "CANCELLED"
+        if self.execution_sessions:
+            return "PAUSED"
+        return "TODO"
+
+    @status.setter
+    def status(self, value: str):
+        val = value.upper()
+        if val == "COMPLETED":
+            self.is_completed = True
+        else:
+            self.is_completed = False
+
 

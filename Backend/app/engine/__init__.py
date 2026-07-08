@@ -16,3 +16,14 @@ from .priority import (
     DEFAULT_WEIGHTS,
     PRIORITY_VALUES,
 )
+from .state_machine import (
+    VALID_TRANSITIONS,
+    is_valid_transition,
+    transition_task_status,
+)
+from .adaptation import (
+    calculate_adjusted_estimate,
+    get_average_actual_duration,
+    DEFAULT_ALPHA,
+)
+
