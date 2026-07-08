@@ -7,6 +7,9 @@ from app.schemas.goal import GoalCreate, GoalUpdate, GoalResponse
 from app.services import goal_service, dependency_service
 from typing import List
 from app.schemas.task import TaskResponse
+from app.schemas.ai_job import AIJobCreate, AIJobResponse
+from app.services import ai_job_service
+from app.worker.tasks import process_ai_decomposition
 
 router = APIRouter(prefix="/goals", tags=["goals"])
 
@@ -78,3 +81,25 @@ def get_workflow_order(
 ):
     """Get topologically sorted tasks for a goal."""
     return dependency_service.get_workflow_order_for_goal(db, goal_id, current_user.id)
+
+
+@router.post("/{goal_id}/ai-decompose", response_model=AIJobResponse, status_code=202)
+def decompose_goal(
+    goal_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Trigger AI decomposition for a goal.
+    
+    Creates a background job and returns immediately with 202 Accepted.
+    Poll GET /ai-jobs/{job_id} for status and results.
+    """
+    # Create job (verifies goal ownership)
+    job_data = AIJobCreate(goal_id=goal_id)
+    job = ai_job_service.create_ai_job(db, current_user.id, job_data)
+    
+    # Enqueue background task (non-blocking)
+    process_ai_decomposition.delay(job.id)
+    
+    return job
