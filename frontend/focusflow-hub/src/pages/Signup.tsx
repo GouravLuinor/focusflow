@@ -73,10 +73,10 @@ const handleSubmit = async (e: React.FormEvent) => {
     // Redirect to login instead of onboarding (better flow)
     navigate('/login');
 
-  } catch (err: any) {
+  } catch (err) {
     toast({
       title: "Signup failed",
-      description: err.message,
+      description: err instanceof Error ? err.message : "Something went wrong",
       variant: "destructive",
     });
   } finally {

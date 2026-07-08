@@ -8,9 +8,14 @@ import { ADHDDashboard } from '@/components/dashboard/ADHDDashboard';
 import { AutismDashboard } from '@/components/dashboard/AutismDashboard';
 import { DyslexiaDashboard } from '@/components/dashboard/DyslexiaDashboard';
 
+interface Profile {
+  onboarding_completed: boolean;
+  support_mode: 'adhd' | 'autism' | 'dyslexia' | null;
+}
+
 export default function Dashboard() {
   const { isAuthenticated } = useApp();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

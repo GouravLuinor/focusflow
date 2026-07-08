@@ -58,10 +58,10 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     navigate('/onboarding'); // or dashboard depending on flow
 
-  } catch (err: any) {
+  } catch (err) {
     toast({
       title: "Login failed",
-      description: err.message,
+      description: err instanceof Error ? err.message : "Something went wrong",
       variant: "destructive",
     });
   } finally {

@@ -77,10 +77,10 @@ const handleContinue = async () => {
 
     navigate('/dashboard');
 
-  } catch (err: any) {
+  } catch (err) {
     toast({
       title: "Something went wrong",
-      description: err.message || "Failed to save profile",
+      description: err instanceof Error ? err.message : "Failed to save profile",
       variant: "destructive",
     });
   }

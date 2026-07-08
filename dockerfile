@@ -29,7 +29,12 @@ COPY --from=builder /app/frontend/dist ./frontend_dist
 # Create/Copy the DB and ensure permissions for signup
 # We put it in /app/dev.db to match your DATABASE_URL above
 COPY Backend/dev.db ./dev.db
-RUN chmod 777 ./dev.db
+
+# TODO: Phase 8 improvements
+# - Add non-root USER
+# - Use Docker volume for database instead of copying
+# - Add health check
+# - Add .dockerignore (done)
 
 # Ensure the app can find the 'app' module
 ENV PYTHONPATH=/app

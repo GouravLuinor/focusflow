@@ -22,6 +22,12 @@ export async function apiRequest(
     headers,
   });
 
+  if (response.status === 401) {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+    throw new Error("Session expired. Redirecting to login.");
+  }
+
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.detail || "Something went wrong");
@@ -29,11 +35,29 @@ export async function apiRequest(
 
   return response.json();
 }
-export function normalizeTasks(data: any[]) {
+export interface APIStep {
+  id?: number;
+  content: string;
+  is_completed: boolean;
+  order: number;
+  [key: string]: unknown;
+}
+
+export interface APITask {
+  id: number;
+  title: string;
+  description: string;
+  is_completed: boolean;
+  order?: number;
+  steps?: APIStep[];
+  [key: string]: unknown;
+}
+
+export function normalizeTasks(data: APITask[]) {
   return data.map((task) => ({
     ...task,
     completed: task.is_completed,
-    steps: task.steps?.map((step: any) => ({
+    steps: task.steps?.map((step: APIStep) => ({
       ...step,
       completed: step.is_completed,
     })) || [],

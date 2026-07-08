@@ -1,24 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap');
 
-/* OpenDyslexic CDN */
-@font-face {
-  font-family: 'OpenDyslexic';
-  src: url('./assets/fonts/OpenDyslexic-Regular.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'OpenDyslexic';
-  src: url('./assets/fonts/OpenDyslexic-Bold.otf') format('opentype');
-  font-weight: bold;
-}
-
-@font-face {
-  font-family: 'OpenDyslexic';
-  src: url('./assets/fonts/OpenDyslexic-Italic.otf') format('opentype');
-  font-style: italic;
-}
+/* OpenDyslexic Fontsource imports */
+@import "@fontsource/opendyslexic/index.css";
+@import "@fontsource/opendyslexic/700.css";
+@import "@fontsource/opendyslexic/400-italic.css";
+@import "@fontsource/opendyslexic/700-italic.css";
 
 
 
