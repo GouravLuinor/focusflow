@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Focus Mode - Practice SQL Joins</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600&amp;display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface": "#FFFFFF",
+                        "on-secondary-container": "#626361",
+                        "tertiary-container": "#a44100",
+                        "tertiary": "#7e3000",
+                        "secondary-fixed": "#e3e2e0",
+                        "inverse-surface": "#302f39",
+                        "surface-bright": "#fcf8ff",
+                        "active-glow": "rgba(79, 70, 229, 0.15)",
+                        "on-primary-container": "#dad7ff",
+                        "on-error-container": "#93000a",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-low": "#f5f2ff",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "surface-tint": "#4d44e3",
+                        "on-background": "#1b1b24",
+                        "surface-dim": "#dcd8e5",
+                        "on-secondary-fixed": "#1a1c1b",
+                        "on-primary": "#ffffff",
+                        "warning": "#D97706",
+                        "tertiary-fixed-dim": "#ffb695",
+                        "on-primary-fixed-variant": "#3323cc",
+                        "surface-container": "#f0ecf9",
+                        "on-tertiary-fixed-variant": "#7b2f00",
+                        "on-surface-variant": "#464555",
+                        "on-error": "#ffffff",
+                        "outline-variant": "#c7c4d8",
+                        "secondary-fixed-dim": "#c7c6c5",
+                        "on-secondary-fixed-variant": "#464746",
+                        "secondary-container": "#e0dfde",
+                        "on-primary-fixed": "#0f0069",
+                        "primary-container": "#4f46e5",
+                        "text-primary": "#1A1A1A",
+                        "on-tertiary-container": "#ffd2be",
+                        "text-muted": "#9E988E",
+                        "primary-fixed": "#e2dfff",
+                        "surface-container-highest": "#e4e1ee",
+                        "inverse-on-surface": "#f3effc",
+                        "on-tertiary-fixed": "#351000",
+                        "success": "#059669",
+                        "inverse-primary": "#c3c0ff",
+                        "error-container": "#ffdad6",
+                        "background": "#fcf8ff",
+                        "on-surface": "#1b1b24",
+                        "surface-container-high": "#eae6f4",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#ffdbcc",
+                        "primary": "#3525cd",
+                        "outline": "#777587",
+                        "text-secondary": "#6B6660",
+                        "secondary": "#5e5e5d",
+                        "border": "#E8E6E1",
+                        "surface-variant": "#e4e1ee"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "screen-padding-desktop": "32px",
+                        "screen-padding-mobile": "24px",
+                        "card-padding": "20px",
+                        "element-gap": "12px",
+                        "section-gap": "32px",
+                        "card-gap": "16px"
+                    },
+                    "fontFamily": {
+                        "task-title": ["lexend"],
+                        "label": ["lexend"],
+                        "headline-md": ["lexend"],
+                        "display": ["lexend"],
+                        "body-sm": ["lexend"],
+                        "body-lg": ["lexend"],
+                        "headline-sm": ["lexend"],
+                        "headline-lg": ["lexend"]
+                    },
+                    "fontSize": {
+                        "task-title": ["18px", { "lineHeight": "1.5", "fontWeight": "500" }],
+                        "label": ["12px", { "lineHeight": "1.2", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "display": ["40px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-sm": ["20px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.3", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Lexend', sans-serif;
+            background-color: #FAF9F7;
+        }
+
+        .pulse-dot {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 0.4;
+            }
+
+            100% {
+                transform: scale(0.8);
+                opacity: 0.8;
+            }
+        }
+    </style>
+</head>
+
+<body
+    class="h-full w-full flex flex-col items-center justify-center relative overflow-hidden transition-opacity duration-200">
+    <!-- Top Navigation (Breadcrumb) - Injected as requested but highly stripped down -->
+    <nav aria-label="Global"
+        class="absolute top-0 left-0 w-full p-screen-padding-mobile md:p-screen-padding-desktop bg-transparent flat no shadows flex items-center justify-start z-10">
+        <button
+            class="flex items-center gap-2 text-text-muted hover:text-text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary-container rounded">
+            <span aria-hidden="true" class="material-symbols-outlined text-[18px]">arrow_back</span>
+            <span class="font-body-sm text-body-sm">Back to Dashboard</span>
+        </button>
+    </nav>
+    <!-- Main Focus Area Container -->
+    <main
+        class="w-full max-w-[560px] px-screen-padding-mobile flex flex-col items-center text-center gap-section-gap relative z-20">
+        <!-- Header & Meta Data -->
+        <header class="flex flex-col items-center gap-3">
+            <div
+                class="inline-flex items-center px-2 py-1 rounded-full bg-surface-container-high border border-border gap-1 mb-2">
+                <span class="w-2 h-2 rounded-full bg-warning"></span>
+                <span class="font-label text-label text-text-secondary tracking-wide">High Priority</span>
+            </div>
+            <h1 class="font-headline-lg text-headline-lg text-text-primary leading-tight">Practice SQL Joins</h1>
+            <p class="font-body-lg text-body-lg text-text-muted">DBMS Exam Preparation</p>
+        </header>
+        <!-- Timer / Elasped Time Display -->
+        <section aria-live="polite" class="flex flex-col items-center justify-center gap-2">
+            <div class="flex items-center gap-3 relative">
+                <!-- Pulsing indicator for active focus -->
+                <div class="relative flex items-center justify-center w-4 h-4">
+                    <div class="absolute inset-0 rounded-full bg-primary-container pulse-dot"></div>
+                    <div class="relative w-2 h-2 rounded-full bg-primary-container"></div>
+                </div>
+                <div class="font-display text-display text-text-primary tabular-nums tracking-tight">18:42</div>
+            </div>
+            <div class="font-body-sm text-body-sm text-text-muted uppercase tracking-wider">elapsed</div>
+        </section>
+        <!-- Current Checkpoint Context -->
+        <section
+            class="w-full bg-surface border border-border rounded-lg p-card-padding flex flex-col gap-2 relative overflow-hidden">
+            <!-- Status Strip (Left Aligned) -->
+            <div class="absolute left-0 top-0 bottom-0 w-[3px] bg-primary-container rounded-l-lg"></div>
+            <p class="font-body-lg text-body-lg text-text-primary text-left pl-2">
+                Current: Complete 3 INNER JOIN practice queries
+            </p>
+            <p class="font-body-sm text-body-sm text-text-muted text-left pl-2">
+                2 of 4 checkpoints
+            </p>
+        </section>
+        <!-- Action Buttons Grid -->
+        <section class="w-full grid grid-cols-1 md:grid-cols-2 gap-card-gap mt-4">
+            <!-- Pause Action (Secondary/Outline) -->
+            <button
+                class="flex flex-col items-center justify-center gap-1 w-full border-2 border-primary-container rounded-lg p-4 bg-transparent text-primary-container hover:bg-surface-container-low hover:scale-[1.01] transition-transform duration-200 focus:outline-none focus:ring-4 focus:ring-active-glow">
+                <span class="font-task-title text-task-title">Pause</span>
+                <span class="font-body-sm text-[12px] text-text-muted font-normal text-center">Take a break, resume
+                    anytime</span>
+            </button>
+            <!-- Complete Action (Primary/Solid) -->
+            <button
+                class="flex flex-col items-center justify-center gap-1 w-full bg-primary-container rounded-lg p-4 text-on-primary shadow-sm hover:scale-[1.01] hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-active-glow">
+                <span class="font-task-title text-task-title">Complete Task</span>
+                <span class="font-body-sm text-[12px] text-on-primary/80 font-normal text-center">Mark as done &amp;
+                    unlock next tasks</span>
+            </button>
+        </section>
+        <!-- Subtle Bottom Meta -->
+        <footer class="mt-8 text-center opacity-70">
+            <p class="font-label text-[12px] text-text-muted tracking-widest uppercase">Blocks: Advanced Queries</p>
+        </footer>
+    </main>
+</body>
+
+</html>

@@ -173,7 +173,8 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply text-foreground antialiased;
+    background-color: #FAF9F7;
     font-family: var(--font-sans);
     line-height: var(--line-height-relaxed);
     letter-spacing: var(--letter-spacing-wide);

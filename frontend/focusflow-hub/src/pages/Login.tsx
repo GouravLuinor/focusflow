@@ -1,158 +1,135 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
-import { AuthLayout } from '@/components/auth/AuthLayout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useApp } from '@/contexts/AppContext';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/api';
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { AlertCircle } from "lucide-react";
+import AuthCard from "@/components/auth/AuthCard";
+import { useApp } from "@/contexts/AppContext";
+import { apiRequest } from "@/lib/api";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { setUser, onboardingComplete, supportMode } = useApp();
-  const { toast } = useToast();
-  
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const { setUser } = useApp();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      setError("Please fill in all fields");
+      return;
+    }
 
-  if (!email || !password) {
-    toast({
-      title: "Missing information",
-      description: "Please fill in all fields",
-      variant: "destructive",
-    });
-    return;
-  }
+    setIsLoading(true);
+    setError(null);
 
-  setIsLoading(true);
+    try {
+      // 1. Call real backend login endpoint
+      const data = await apiRequest("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
 
-  try {
-    // 🔥 REAL BACKEND LOGIN
-    const data = await apiRequest('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({
-        email,
-        password,
-      }),
-    });
+      // 2. Store session token
+      localStorage.setItem("token", data.access_token);
 
-    // 🔥 STORE TOKEN
-    localStorage.setItem('token', data.access_token);
+      // 3. Fetch authenticated user profile
+      const user = await apiRequest("/auth/me");
+      setUser(user);
 
-    // 🔥 GET USER
-    const user = await apiRequest('/auth/me');
-    setUser(user);
-
-    toast({
-      title: "Welcome back 👋",
-      description: "Login successful",
-    });
-
-    navigate('/onboarding'); // or dashboard depending on flow
-
-  } catch (err) {
-    toast({
-      title: "Login failed",
-      description: err instanceof Error ? err.message : "Something went wrong",
-      variant: "destructive",
-    });
-  } finally {
-    setIsLoading(false);
-  }
-};
-
+      // 4. Redirect to dashboard
+      navigate("/dashboard");
+    } catch (err) {
+      setError("Invalid email or password");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <AuthLayout
-      title="Welcome back"
-      subtitle="Sign in to continue your journey"
-    >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="email" className="text-foreground font-medium">
-            Email address
-          </Label>
-          <div className="relative">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="pl-12 h-12 rounded-xl border-border/60 focus:border-primary transition-colors"
-            />
-          </div>
+    <AuthCard title="Welcome back" subtitle="Sign in to continue">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        
+        {/* Email Field */}
+        <div className="flex flex-col gap-2">
+          <label className="text-[12px] font-medium text-[#6B6660] font-sans" htmlFor="email">
+            Email
+          </label>
+          <input
+            className={`w-full bg-white border ${
+              error && !email ? "border-[#D97706] focus:ring-[#D97706] focus:border-[#D97706]" : "border-[#E8E6E1] focus:ring-[#4F46E5] focus:border-[#4F46E5]"
+            } rounded-lg p-3 text-[14px] text-[#1A1A1A] placeholder:text-[#9E988E] outline-none transition-all duration-200 focus:ring-2`}
+            id="email"
+            name="email"
+            placeholder="alex@example.com"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="password" className="text-foreground font-medium">
-            Password
-          </Label>
-          <div className="relative">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="pl-12 pr-12 h-12 rounded-xl border-border/60 focus:border-primary transition-colors"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+        {/* Password Field */}
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between items-center">
+            <label className="text-[12px] font-medium text-[#6B6660] font-sans" htmlFor="password">
+              Password
+            </label>
+            <a
+              className="text-[14px] text-[#6B6660] hover:underline transition-all font-sans"
+              href="#"
+              onClick={(e) => e.preventDefault()}
             >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-            </button>
+              Forgot password?
+            </a>
           </div>
+          <input
+            className={`w-full bg-white border ${
+              error && !password ? "border-[#D97706] focus:ring-[#D97706] focus:border-[#D97706]" : "border-[#E8E6E1] focus:ring-[#4F46E5] focus:border-[#4F46E5]"
+            } rounded-lg p-3 text-[14px] text-[#1A1A1A] placeholder:text-[#9E988E] outline-none transition-all duration-200 focus:ring-2`}
+            id="password"
+            name="password"
+            placeholder="••••••••"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </div>
 
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+        {/* Error State */}
+        {error && (
+          <div className="flex items-center justify-center gap-2 text-[#D97706] text-[14px] py-2 font-sans">
+            <AlertCircle className="h-[18px] w-[18px]" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Submit Button */}
+        <button
+          className="w-full bg-[#4F46E5] text-white font-medium text-[18px] py-4 rounded-lg mt-2 hover:opacity-90 active:scale-[0.98] transition-all duration-200 flex justify-center items-center font-sans disabled:opacity-50"
+          type="submit"
+          disabled={isLoading}
         >
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="w-full h-12 rounded-xl bg-gradient-calm text-primary-foreground font-semibold text-lg shadow-glow hover:shadow-lg transition-all duration-300"
-          >
-            {isLoading ? (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full"
-              />
-            ) : (
-              <>
-                Sign in
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </>
-            )}
-          </Button>
-        </motion.div>
-
-        <div className="text-center">
-          <p className="text-muted-foreground">
-            Don't have an account?{' '}
-            <Link
-              to="/signup"
-              className="text-primary font-medium hover:underline transition-colors"
-            >
-              Create one
-            </Link>
-          </p>
-        </div>
+          {isLoading ? (
+            <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            "Sign In"
+          )}
+        </button>
       </form>
-    </AuthLayout>
+
+      {/* Card Footer Link */}
+      <div className="mt-8 text-center">
+        <p className="text-[14px] text-[#6B6660] font-sans">
+          Don't have an account?{" "}
+          <Link to="/signup" className="text-[#4F46E5] font-medium hover:underline transition-all">
+            Sign up
+          </Link>
+        </p>
+      </div>
+    </AuthCard>
   );
 }

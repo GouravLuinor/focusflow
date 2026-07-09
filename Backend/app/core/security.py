@@ -9,9 +9,11 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 # JWT config (we'll move secrets to env later)
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+load_dotenv(env_path)
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:

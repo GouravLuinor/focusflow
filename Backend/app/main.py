@@ -19,9 +19,7 @@ from pathlib import Path
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # This ensures your tables are created in dev.db on startup (only for SQLite)
-    if "sqlite" in DATABASE_URL:
-        Base.metadata.create_all(bind=engine)
+    # create_all disabled — use Alembic migrations
     yield
 
 app = FastAPI(title="FocusFlow Backend", lifespan=lifespan)

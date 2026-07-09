@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>FocusFlow Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600&amp;display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-highest": "#e4e1ee",
+                        "primary-fixed": "#e2dfff",
+                        "surface-dim": "#dcd8e5",
+                        "on-background": "#1b1b24",
+                        "on-primary-fixed": "#0f0069",
+                        "secondary-container": "#e0dfde",
+                        "secondary": "#5e5e5d",
+                        "on-secondary-container": "#626361",
+                        "text-secondary": "#6B6660",
+                        "error": "#ba1a1a",
+                        "tertiary": "#7e3000",
+                        "on-secondary": "#ffffff",
+                        "inverse-primary": "#c3c0ff",
+                        "outline-variant": "#c7c4d8",
+                        "text-muted": "#9E988E",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed-variant": "#464746",
+                        "primary": "#3525cd",
+                        "primary-container": "#4f46e5",
+                        "background": "#fcf8ff",
+                        "surface-container-high": "#eae6f4",
+                        "on-tertiary-fixed": "#351000",
+                        "surface-variant": "#e4e1ee",
+                        "on-surface-variant": "#464555",
+                        "on-tertiary-container": "#ffd2be",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#f0ecf9",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff",
+                        "active-glow": "rgba(79, 70, 229, 0.15)",
+                        "surface-bright": "#fcf8ff",
+                        "text-primary": "#1A1A1A",
+                        "surface": "#FFFFFF",
+                        "outline": "#777587",
+                        "surface-container-low": "#f5f2ff",
+                        "tertiary-fixed": "#ffdbcc",
+                        "inverse-on-surface": "#f3effc",
+                        "tertiary-fixed-dim": "#ffb695",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "inverse-surface": "#302f39",
+                        "on-primary-fixed-variant": "#3323cc",
+                        "warning": "#D97706",
+                        "surface-tint": "#4d44e3",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "on-secondary-fixed": "#1a1c1b",
+                        "on-primary-container": "#dad7ff",
+                        "secondary-fixed-dim": "#c7c6c5",
+                        "tertiary-container": "#a44100",
+                        "on-tertiary-fixed-variant": "#7b2f00",
+                        "border": "#E8E6E1",
+                        "success": "#059669",
+                        "on-surface": "#1b1b24",
+                        "secondary-fixed": "#e3e2e0"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "element-gap": "12px",
+                        "screen-padding-mobile": "24px",
+                        "section-gap": "32px",
+                        "screen-padding-desktop": "32px",
+                        "card-padding": "20px",
+                        "card-gap": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["lexend"],
+                        "headline-sm": ["lexend"],
+                        "task-title": ["lexend"],
+                        "label": ["lexend"],
+                        "display": ["lexend"],
+                        "body-lg": ["lexend"],
+                        "headline-md": ["lexend"],
+                        "body-sm": ["lexend"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "task-title": ["18px", { "lineHeight": "1.5", "fontWeight": "500" }],
+                        "label": ["12px", { "lineHeight": "1.2", "fontWeight": "500" }],
+                        "display": ["40px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "body-sm": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #FAF9F7;
+        }
+
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #E8E6E1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #c7c6c5;
+        }
+
+        .active-card-shadow {
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+        }
+    </style>
+</head>
+
+<body class="font-body-lg text-body-lg text-text-primary antialiased h-screen flex overflow-hidden">
+    <!-- SideNavBar -->
+    <nav class="bg-transparent h-screen w-64 fixed left-0 top-0 flex flex-col py-8 z-20 border-r border-border/50">
+        <!-- Brand -->
+        <div class="px-8 mb-12">
+            <div class="flex items-center gap-4">
+                <div
+                    class="w-10 h-10 rounded-full overflow-hidden bg-primary-container flex items-center justify-center text-white font-bold text-xl">
+                    FF
+                </div>
+                <div>
+                    <h1 class="font-headline-md text-headline-md text-text-primary tracking-tight">FocusFlow</h1>
+                    <p class="font-label text-label text-text-muted">Stay Grounded</p>
+                </div>
+            </div>
+        </div>
+        <!-- Navigation Links -->
+        <div class="flex-1 px-4 space-y-2">
+            <a class="flex items-center gap-4 px-4 py-3 rounded-lg font-label text-label text-text-secondary hover:bg-surface-container-high transition-all duration-200"
+                href="#">
+                <span class="material-symbols-outlined text-[20px]">assignment_turned_in</span>
+                Tasks
+            </a>
+            <a class="flex items-center gap-4 px-4 py-3 rounded-lg font-label text-label text-primary-container border-l-4 border-primary-container bg-surface transition-all duration-200 active-card-shadow"
+                href="#">
+                <span class="material-symbols-outlined text-[20px]">center_focus_strong</span>
+                Focus
+            </a>
+            <a class="flex items-center gap-4 px-4 py-3 rounded-lg font-label text-label text-text-secondary hover:bg-surface-container-high transition-all duration-200"
+                href="#">
+                <span class="material-symbols-outlined text-[20px]">analytics</span>
+                Insights
+            </a>
+            <a class="flex items-center gap-4 px-4 py-3 rounded-lg font-label text-label text-text-secondary hover:bg-surface-container-high transition-all duration-200"
+                href="#">
+                <span class="material-symbols-outlined text-[20px]">settings</span>
+                Settings
+            </a>
+        </div>
+        <!-- CTA -->
+        <div class="px-8 mt-auto">
+            <button
+                class="w-full bg-primary-container hover:bg-surface-tint text-white font-label text-label py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                Start Focus Mode
+            </button>
+        </div>
+    </nav>
+    <!-- Main Content Area -->
+    <main class="ml-64 flex-1 h-full overflow-y-auto pt-8 pb-12 px-screen-padding-desktop">
+        <!-- Header Section -->
+        <div class="max-w-[1080px] mx-auto mb-section-gap flex justify-between items-end">
+            <div>
+                <h2 class="font-headline-lg text-headline-lg text-text-primary mb-1">Good evening, Alex</h2>
+                <p class="font-body-lg text-body-lg text-text-secondary">You have 90 minutes available today</p>
+            </div>
+            <!-- Minimalistic Top Right Actions -->
+            <div class="flex items-center gap-4">
+                <button
+                    class="w-9 h-9 rounded-full border border-border flex items-center justify-center text-text-secondary hover:text-primary transition-colors hover:bg-surface">
+                    <span class="material-symbols-outlined">search</span>
+                </button>
+                <img alt="Avatar" class="w-9 h-9 rounded-full object-cover border border-border"
+                    data-alt="A professional headshot of a young man with short brown hair, wearing a clean white t-shirt, against a soft gray background. Bright, high-key lighting, minimalist aesthetic."
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTcCmSJW_iFwcChD_muRzj-J0kiA7VYsbnGeqzTE1h8lincwNyGYWx96vdaBHZ41O3yucaTRhqsYUxVFXEp8fFzS6vpTep5BEoc-jqXl1O9Snw4MNF2lx-mkO6YhPjPf3V8X0aab64qXXwhYS32xXUWg2Ka3xgs5ohYzt6zWtMorxM1YZH8XF2ZmB5jrKJMeewxi3KEd4nqfmYotDKmomGnPzT9xNXM_r5gar9XEzBvDe5NZlPIfFw5aoYkJpKo0pwyZnAWTlp0sA" />
+            </div>
+        </div>
+        <!-- Two Column Layout -->
+        <div class="max-w-[1080px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- LEFT COLUMN (55%) -->
+            <div class="lg:col-span-7 flex flex-col gap-section-gap">
+                <!-- Next Best Action Card -->
+                <section>
+                    <h3 class="font-label text-label text-text-muted uppercase tracking-wider mb-card-gap">Next Best
+                        Action</h3>
+                    <div
+                        class="bg-surface rounded-xl border border-border overflow-hidden active-card-shadow flex hover:scale-[1.01] transition-transform duration-200">
+                        <!-- Status Strip -->
+                        <div class="w-[4px] bg-primary-container shrink-0"></div>
+                        <div class="p-card-padding flex-1 flex flex-col gap-4">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="font-headline-sm text-headline-sm text-text-primary mb-1">Practice SQL
+                                        Joins</h4>
+                                    <div class="flex items-center gap-2 font-body-sm text-body-sm text-text-secondary">
+                                        <span class="material-symbols-outlined text-[16px]">schedule</span>
+                                        <span>42 min</span>
+                                        <span class="text-border mx-1">•</span>
+                                        <span class="text-primary-container font-medium">High Priority</span>
+                                    </div>
+                                </div>
+                                <div
+                                    class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-primary-container">
+                                    <span class="material-symbols-outlined text-[24px]">database</span>
+                                </div>
+                            </div>
+                            <div class="bg-background rounded-lg p-4 mt-2">
+                                <p class="font-label text-label text-text-secondary mb-2">Recommended because:</p>
+                                <ul class="space-y-2">
+                                    <li class="flex items-start gap-3 font-body-sm text-body-sm text-text-primary">
+                                        <span
+                                            class="material-symbols-outlined text-[16px] text-primary-container mt-0.5">check</span>
+                                        Due in 2 days
+                                    </li>
+                                    <li class="flex items-start gap-3 font-body-sm text-body-sm text-text-primary">
+                                        <span
+                                            class="material-symbols-outlined text-[16px] text-primary-container mt-0.5">check</span>
+                                        Unlocks Advanced Queries
+                                    </li>
+                                    <li class="flex items-start gap-3 font-body-sm text-body-sm text-text-primary">
+                                        <span
+                                            class="material-symbols-outlined text-[16px] text-primary-container mt-0.5">check</span>
+                                        Fits your 90-minute window
+                                    </li>
+                                </ul>
+                            </div>
+                            <button
+                                class="mt-2 w-full bg-primary-container hover:bg-surface-tint text-white font-task-title text-task-title py-4 rounded-lg transition-colors shadow-[0_4px_14px_0_rgba(79,70,229,0.39)]">
+                                Start Focus
+                            </button>
+                        </div>
+                    </div>
+                </section>
+                <!-- Today's Plan Section -->
+                <section>
+                    <div class="flex justify-between items-center mb-card-gap">
+                        <h3 class="font-headline-sm text-headline-sm text-text-primary">Today</h3>
+                        <button class="font-label text-label text-primary-container hover:underline">Edit plan</button>
+                    </div>
+                    <div class="flex flex-col gap-card-gap">
+                        <!-- Completed Task -->
+                        <div
+                            class="bg-surface rounded-xl border border-border flex opacity-70 hover:opacity-100 transition-opacity">
+                            <div class="w-[3px] bg-success shrink-0 rounded-l-xl"></div>
+                            <div class="p-4 flex-1 flex items-center gap-4">
+                                <div class="w-16 font-body-sm text-body-sm text-text-secondary text-right shrink-0">
+                                    09:00</div>
+                                <div
+                                    class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-success shrink-0">
+                                    <span class="material-symbols-outlined text-[18px]">check</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-task-title text-task-title text-text-secondary line-through">Review
+                                        PRs</p>
+                                </div>
+                                <div class="font-body-sm text-body-sm text-text-secondary shrink-0">30m</div>
+                            </div>
+                        </div>
+                        <!-- Current Task (Active) -->
+                        <div
+                            class="bg-surface rounded-xl border border-border flex active-card-shadow hover:scale-[1.01] transition-transform">
+                            <div class="w-[3px] bg-primary-container shrink-0 rounded-l-xl"></div>
+                            <div class="p-4 flex-1 flex items-center gap-4">
+                                <div
+                                    class="w-16 font-body-sm text-body-sm text-primary-container font-medium text-right shrink-0">
+                                    18:00</div>
+                                <div
+                                    class="w-8 h-8 rounded-full border-2 border-primary-container flex items-center justify-center text-primary-container shrink-0">
+                                    <span class="w-2 h-2 rounded-full bg-primary-container"></span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-task-title text-task-title text-text-primary">Practice SQL Joins</p>
+                                </div>
+                                <div class="font-body-sm text-body-sm text-primary-container shrink-0 font-medium">45m
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Upcoming Task 1 -->
+                        <div
+                            class="bg-surface rounded-xl border border-border flex hover:bg-surface-container-low transition-colors">
+                            <div class="w-[3px] bg-outline-variant shrink-0 rounded-l-xl"></div>
+                            <div class="p-4 flex-1 flex items-center gap-4">
+                                <div class="w-16 font-body-sm text-body-sm text-text-secondary text-right shrink-0">
+                                    19:00</div>
+                                <div
+                                    class="w-8 h-8 rounded-full border border-outline-variant flex items-center justify-center text-text-muted shrink-0">
+                                    <span class="material-symbols-outlined text-[18px]">menu_book</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-task-title text-task-title text-text-primary">Read System Design Ch.
+                                        4</p>
+                                </div>
+                                <div class="font-body-sm text-body-sm text-text-secondary shrink-0">45m</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <!-- RIGHT COLUMN (45%) -->
+            <div class="lg:col-span-5 flex flex-col gap-section-gap">
+                <!-- Active Goals -->
+                <section>
+                    <div class="flex justify-between items-center mb-card-gap">
+                        <h3 class="font-label text-label text-text-muted uppercase tracking-wider">Active Goals</h3>
+                    </div>
+                    <div class="flex flex-col gap-card-gap">
+                        <!-- Goal Card 1 -->
+                        <div
+                            class="bg-surface rounded-xl border border-border p-card-padding hover:scale-[1.01] transition-transform">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h4 class="font-task-title text-task-title text-text-primary mb-1">DBMS Exam
+                                        Preparation</h4>
+                                    <p class="font-body-sm text-body-sm text-text-secondary">8 days remaining</p>
+                                </div>
+                                <span class="material-symbols-outlined text-text-muted">school</span>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="flex justify-between font-label text-label">
+                                    <span class="text-text-secondary">Progress</span>
+                                    <span class="text-primary-container font-medium">46%</span>
+                                </div>
+                                <div class="w-full bg-surface-container rounded-full h-[6px] overflow-hidden">
+                                    <div class="bg-primary-container h-full rounded-full" style="width: 46%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Goal Card 2 -->
+                        <div
+                            class="bg-surface rounded-xl border border-border p-card-padding hover:scale-[1.01] transition-transform">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h4 class="font-task-title text-task-title text-text-primary mb-1">Portfolio
+                                        Redesign</h4>
+                                    <p class="font-body-sm text-body-sm text-text-secondary">No strict deadline</p>
+                                </div>
+                                <span class="material-symbols-outlined text-text-muted">web</span>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="flex justify-between font-label text-label">
+                                    <span class="text-text-secondary">Progress</span>
+                                    <span class="text-primary-container font-medium">15%</span>
+                                </div>
+                                <div class="w-full bg-surface-container rounded-full h-[6px] overflow-hidden">
+                                    <div class="bg-primary-container h-full rounded-full" style="width: 15%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-center mt-2">
+                            <a class="font-label text-label text-primary-container hover:underline opacity-80 hover:opacity-100 transition-opacity"
+                                href="#">View all goals</a>
+                        </div>
+                    </div>
+                </section>
+                <!-- Quick Stats (Bento style minimal) -->
+                <section class="mt-auto pt-8">
+                    <h3 class="font-label text-label text-text-muted uppercase tracking-wider mb-card-gap">Quick Stats
+                    </h3>
+                    <div class="grid grid-cols-3 gap-element-gap">
+                        <div
+                            class="bg-surface rounded-xl border border-border p-4 flex flex-col items-center justify-center text-center">
+                            <span class="material-symbols-outlined text-text-muted mb-2 text-[20px]">task_alt</span>
+                            <span class="font-headline-sm text-headline-sm text-text-primary">12</span>
+                            <span class="font-label text-label text-text-secondary mt-1">completed</span>
+                        </div>
+                        <div
+                            class="bg-surface rounded-xl border border-border p-4 flex flex-col items-center justify-center text-center">
+                            <span class="material-symbols-outlined text-text-muted mb-2 text-[20px]">timer</span>
+                            <span class="font-headline-sm text-headline-sm text-text-primary">6h 24m</span>
+                            <span class="font-label text-label text-text-secondary mt-1">focus time</span>
+                        </div>
+                        <div
+                            class="bg-surface rounded-xl border border-border p-4 flex flex-col items-center justify-center text-center">
+                            <span
+                                class="material-symbols-outlined text-text-muted mb-2 text-[20px]">local_fire_department</span>
+                            <span class="font-headline-sm text-headline-sm text-text-primary">5</span>
+                            <span class="font-label text-label text-text-secondary mt-1">day streak</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

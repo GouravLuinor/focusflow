@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html class="light antialiased" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>FocusFlow | Calm productivity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#0f0069",
+                        "on-secondary": "#ffffff",
+                        "surface": "#FFFFFF",
+                        "surface-container-highest": "#e4e1ee",
+                        "on-primary-fixed-variant": "#3323cc",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#1b1b24",
+                        "warning": "#D97706",
+                        "error": "#ba1a1a",
+                        "text-muted": "#9E988E",
+                        "tertiary-fixed-dim": "#ffb695",
+                        "secondary-fixed": "#e3e2e0",
+                        "secondary-fixed-dim": "#c7c6c5",
+                        "on-tertiary-fixed-variant": "#7b2f00",
+                        "surface-bright": "#fcf8ff",
+                        "primary": "#3525cd",
+                        "secondary-container": "#e0dfde",
+                        "border": "#E8E6E1",
+                        "text-primary": "#1A1A1A",
+                        "surface-container": "#f0ecf9",
+                        "on-primary": "#ffffff",
+                        "inverse-on-surface": "#f3effc",
+                        "tertiary": "#7e3000",
+                        "on-secondary-fixed": "#1a1c1b",
+                        "outline": "#777587",
+                        "on-secondary-container": "#626361",
+                        "primary-container": "#4f46e5",
+                        "active-glow": "rgba(79, 70, 229, 0.15)",
+                        "surface-container-low": "#f5f2ff",
+                        "primary-fixed": "#e2dfff",
+                        "text-secondary": "#6B6660",
+                        "outline-variant": "#c7c4d8",
+                        "on-background": "#1b1b24",
+                        "tertiary-fixed": "#ffdbcc",
+                        "surface-container-high": "#eae6f4",
+                        "background": "#fcf8ff",
+                        "on-tertiary-fixed": "#351000",
+                        "tertiary-container": "#a44100",
+                        "secondary": "#5e5e5d",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-container": "#dad7ff",
+                        "inverse-primary": "#c3c0ff",
+                        "on-surface-variant": "#464555",
+                        "on-tertiary-container": "#ffd2be",
+                        "on-secondary-fixed-variant": "#464746",
+                        "error-container": "#ffdad6",
+                        "surface-dim": "#dcd8e5",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "surface-variant": "#e4e1ee",
+                        "inverse-surface": "#302f39",
+                        "surface-tint": "#4d44e3",
+                        "success": "#059669",
+                        "on-error-container": "#93000a",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "screen-padding-mobile": "24px",
+                        "card-gap": "16px",
+                        "element-gap": "12px",
+                        "card-padding": "20px",
+                        "section-gap": "32px",
+                        "screen-padding-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "task-title": ["Lexend", "sans-serif"],
+                        "headline-sm": ["Lexend", "sans-serif"],
+                        "body-lg": ["Lexend", "sans-serif"],
+                        "label": ["Lexend", "sans-serif"],
+                        "headline-lg": ["Lexend", "sans-serif"],
+                        "body-sm": ["Lexend", "sans-serif"],
+                        "headline-md": ["Lexend", "sans-serif"],
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "task-title": ["18px", { "lineHeight": "1.5", "fontWeight": "500" }],
+                        "headline-sm": ["20px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label": ["12px", { "lineHeight": "1.2", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "1.4", "fontWeight": "500" }],
+                        "display": ["40px", { "lineHeight": "1.2", "fontWeight": "600" }]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .delay-100 {
+            animation-delay: 100ms;
+        }
+
+        .delay-200 {
+            animation-delay: 200ms;
+        }
+
+        .delay-300 {
+            animation-delay: 300ms;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .fade-in-up {
+                animation: none;
+                opacity: 1;
+                transform: none;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-surface text-text-primary min-h-screen flex flex-col relative overflow-hidden font-body-lg">
+    <div class="absolute inset-0 z-0">
+        <!-- STITCH_SHADER_START:ANIMATION_25 class="absolute inset-0 w-full h-full" -->
+        <div class="absolute inset-0 w-full h-full" style="display:block;">
+            <canvas id="shader-canvas-ANIMATION_25" style="display:block;width:100%;height:100%"></canvas>
+            <script>
+                    (function () {
+                        const canvas = document.getElementById('shader-canvas-ANIMATION_25');
+
+                        // Sync the WebGL drawing-buffer size with the CSS-driven layout size.
+                        // This fires on initial layout and whenever the element is resized.
+                        function syncSize() {
+                            const w = canvas.clientWidth || 1280;
+                            const h = canvas.clientHeight || 720;
+                            if (canvas.width !== w || canvas.height !== h) {
+                                canvas.width = w;
+                                canvas.height = h;
+                            }
+                        }
+                        if (typeof ResizeObserver !== 'undefined') {
+                            new ResizeObserver(syncSize).observe(canvas);
+                        }
+                        syncSize();
+
+                        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                        if (!gl) return;
+                        const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+                        const fs = `precision highp float;
+varying vec2 v_texCoord;
+uniform float u_time;
+uniform vec2 u_resolution;
+
+void main() {
+    vec2 uv = v_texCoord;
+    
+    // Create a very subtle, slow-moving indigo blob effect
+    float noise = sin(uv.x * 3.0 + u_time * 0.2) * cos(uv.y * 2.5 - u_time * 0.15);
+    noise += sin(uv.y * 4.0 + u_time * 0.1) * cos(uv.x * 3.5 + u_time * 0.2);
+    
+    // Background color: #FAF9F7 (250, 249, 247)
+    vec3 bgColor = vec3(0.98, 0.976, 0.968);
+    
+    // Indigo accent: #4F46E5 (79, 70, 229)
+    vec3 accentColor = vec3(0.31, 0.27, 0.90);
+    
+    // Blend with very low opacity (5-8%)
+    float alpha = smoothstep(-1.5, 1.5, noise) * 0.08;
+    vec3 finalColor = mix(bgColor, accentColor, alpha);
+    
+    gl_FragColor = vec4(finalColor, 1.0);
+}`;
+                        function cs(type, src) {
+                            const s = gl.createShader(type);
+                            gl.shaderSource(s, src);
+                            gl.compileShader(s);
+                            return s;
+                        }
+                        const prog = gl.createProgram();
+                        gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+                        gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+                        gl.linkProgram(prog);
+                        gl.useProgram(prog);
+                        const buf = gl.createBuffer();
+                        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+                        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+                        const pos = gl.getAttribLocation(prog, 'a_position');
+                        gl.enableVertexAttribArray(pos);
+                        gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+                        const uTime = gl.getUniformLocation(prog, 'u_time');
+                        const uRes = gl.getUniformLocation(prog, 'u_resolution');
+                        const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+                        // u_mouse is in pixel coordinates matching u_resolution (ShaderToy convention).
+                        // Shaders that need normalized coords should use: u_mouse / u_resolution.
+                        let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+                        window.addEventListener('mousemove', (event) => {
+                            const rect = canvas.getBoundingClientRect();
+                            if (rect.width && rect.height) {
+                                const nx = (event.clientX - rect.left) / rect.width;
+                                const ny = 1.0 - (event.clientY - rect.top) / rect.height;
+                                mouse.x = nx * canvas.width;
+                                mouse.y = ny * canvas.height;
+                            }
+                        });
+
+                        function render(t) {
+                            if (typeof ResizeObserver === 'undefined') syncSize();
+                            gl.viewport(0, 0, canvas.width, canvas.height);
+                            if (uTime) gl.uniform1f(uTime, t * 0.001);
+                            if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+                            if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+                            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+                            requestAnimationFrame(render);
+                        }
+                        render(0);
+                    })();
+            </script>
+        </div>
+        <!-- STITCH_SHADER_END:ANIMATION_25 -->
+    </div>
+    <main
+        class="relative z-10 flex-grow flex flex-col items-center justify-center p-screen-padding-mobile md:p-screen-padding-desktop">
+        <div class="w-full max-w-[600px] flex flex-col items-center text-center space-y-10">
+            <header class="flex flex-col items-center gap-3 fade-in-up">
+                <img alt="FocusFlow Logo" class="w-12 h-12 object-contain rounded-md shadow-sm"
+                    src="https://lh3.googleusercontent.com/aida/AP1WRLvVfnOLfeDZEmOnoQeBs7a-e_TxAnhN77g7L8_qQv7YqZCfP09RPZr9FxiQ31hxPyS5NXL_QlTDHGwD7wyNpRB4C0P9fX6lsrzrb38m5pGlnTyeXFeqA4bq_lPgMnaUG6Bp5qGAY2Gg6V3eBkAWJcmsvRCX9uP23gGHP-jg9C1y37nDxyoCt3txJsGTZsy8BZYEE9ZU1xP4VuC7QilIEj3comtmtwPb0aeN8zYg4nuTNmIxJ6PGykkTT3c" />
+                <h1 class="font-headline-sm text-text-primary tracking-tight">FocusFlow</h1>
+            </header>
+            <section class="flex flex-col items-center space-y-6 w-full">
+                <div class="space-y-4 fade-in-up delay-100">
+                    <h2 class="font-display text-text-primary leading-tight">One thing at a time.</h2>
+                    <p class="font-task-title text-text-secondary mx-auto max-w-[450px]">
+                        An adaptive workflow platform designed for the way your mind works.
+                    </p>
+                </div>
+                <div class="flex flex-wrap justify-center gap-2 fade-in-up delay-200">
+                    <span
+                        class="px-4 py-2 bg-surface-container rounded-full font-label text-on-surface-variant border border-border">Smart
+                        scheduling</span>
+                    <span
+                        class="px-4 py-2 bg-surface-container rounded-full font-label text-on-surface-variant border border-border">Dependency-aware
+                        workflows</span>
+                    <span
+                        class="px-4 py-2 bg-surface-container rounded-full font-label text-on-surface-variant border border-border">Neuro-inclusive
+                        design</span>
+                </div>
+            </section>
+            <div aria-hidden="true" class="w-full max-w-sm h-32 flex items-center justify-center fade-in-up delay-200">
+                <svg class="w-full h-full opacity-60" fill="none" viewbox="0 0 200 100"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <circle class="fill-primary-container/10" cx="50" cy="50" r="30"></circle>
+                    <rect class="fill-surface-variant" height="40" rx="8" width="40" x="90" y="30"></rect>
+                    <path class="fill-tertiary-fixed-dim/20" d="M150 70 L170 30 L190 70 Z"></path>
+                    <path class="text-border" d="M50 50 C 90 20, 110 80, 170 50" fill="none" stroke="currentColor"
+                        stroke-dasharray="4 4" stroke-width="2"></path>
+                </svg>
+            </div>
+            <section class="flex flex-col items-center w-full space-y-4 fade-in-up delay-300">
+                <button
+                    class="w-full sm:w-auto px-8 py-4 bg-primary-container hover:bg-primary-container/90 text-on-primary font-task-title rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-100 shadow-[0_4px_14px_0_rgba(79,70,229,0.25)] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface">
+                    Get Started
+                </button>
+                <p class="font-body-sm text-text-secondary">
+                    Already have an account? <a
+                        class="text-primary hover:text-primary-container underline transition-colors" href="#">Sign
+                        in</a>
+                </p>
+            </section>
+        </div>
+    </main>
+    <footer class="relative z-10 w-full py-6 flex justify-center fade-in-up delay-300">
+        <span class="font-label text-text-muted">FocusFlow</span>
+    </footer>
+</body>
+
+</html>
