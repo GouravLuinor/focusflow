@@ -16,7 +16,7 @@ export function TopBar() {
   return (
     <>
       {/* TopAppBar (Mobile) */}
-      <header className="md:hidden flex justify-between items-center px-6 py-4 w-full h-16 bg-[#FAF9F7] z-40 sticky top-0 border-b border-[#E8E6E1]/50">
+      <header className="md:hidden flex justify-between items-center px-6 py-4 w-full h-16 bg-[#FAF9F7] dark:bg-dark-background z-40 sticky top-0 border-b border-[#E8E6E1]/50 dark:border-dark-border">
         <div className="text-[20px] font-medium text-[#4F46E5] tracking-tight">
           FocusFlow
         </div>

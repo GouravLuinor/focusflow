@@ -90,10 +90,10 @@ def generate_schedule(
         task_dicts.append({
             "id": task.id,
             "title": task.title,
-            "priority": getattr(task, "priority", "MEDIUM") or "MEDIUM",
-            "deadline": getattr(task, "deadline", None),
-            "estimated_minutes": getattr(task, "estimated_minutes", None),
-            "postponement_count": getattr(task, "postponement_count", 0) or 0,
+            "priority": task.priority or "MEDIUM",
+            "deadline": task.deadline,
+            "estimated_minutes": task.estimated_minutes,
+            "postponement_count": task.postponement_count or 0,
         })
     
     # 7. Score and select plan
@@ -147,9 +147,9 @@ def generate_schedule(
             "total_score": scored["total_score"],
             "components": scored.get("components", {}),
             "reasons": scored.get("reasons", []),
-            "estimated_minutes": getattr(task, "estimated_minutes", None) if task else None,
-            "priority": getattr(task, "priority", "MEDIUM") if task else "MEDIUM",
-            "deadline": getattr(task, "deadline", None) if task else None,
+            "estimated_minutes": task.estimated_minutes if task else None,
+            "priority": (task.priority or "MEDIUM") if task else "MEDIUM",
+            "deadline": task.deadline if task else None,
             "overflow": scored.get("overflow", False),
         })
     

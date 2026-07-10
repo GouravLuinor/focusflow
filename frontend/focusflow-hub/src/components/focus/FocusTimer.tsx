@@ -1,6 +1,9 @@
 interface FocusTimerProps {
   seconds: number;
   isPaused: boolean;
+  isRunning: boolean;
+  onStart: () => void;
+  estimatedMinutes?: number | null;
 }
 
 function formatTime(totalSeconds: number): string {
@@ -9,7 +12,32 @@ function formatTime(totalSeconds: number): string {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
-export function FocusTimer({ seconds, isPaused }: FocusTimerProps) {
+export function FocusTimer({
+  seconds,
+  isPaused,
+  isRunning,
+  onStart,
+  estimatedMinutes,
+}: FocusTimerProps) {
+  if (!isRunning) {
+    return (
+      <section className="flex flex-col items-center justify-center gap-4 py-6">
+        <button
+          onClick={onStart}
+          data-testid="focus-start-btn"
+          className="bg-[#4F46E5] hover:bg-[#4338ca] text-white font-semibold py-4 px-8 rounded-lg transition-all shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] text-[18px] font-sans hover:scale-[1.02] active:scale-[0.98] duration-150"
+        >
+          Start Focus
+        </button>
+        {estimatedMinutes !== undefined && estimatedMinutes !== null && (
+          <div className="text-[14px] text-[#9E988E] font-sans">
+            Estimated: {estimatedMinutes} min
+          </div>
+        )}
+      </section>
+    );
+  }
+
   return (
     <section aria-live="polite" className="flex flex-col items-center justify-center gap-2">
       <style>{`

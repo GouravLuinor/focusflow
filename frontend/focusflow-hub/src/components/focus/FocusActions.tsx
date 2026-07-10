@@ -5,6 +5,7 @@ interface FocusActionsProps {
   isPausing?: boolean;
   isCompleting?: boolean;
   disabled?: boolean;
+  sessionId?: number | string | null;
 }
 
 export function FocusActions({
@@ -14,13 +15,17 @@ export function FocusActions({
   isPausing = false,
   isCompleting = false,
   disabled = false,
+  sessionId = null,
 }: FocusActionsProps) {
+  const isButtonsDisabled = disabled || !sessionId || isPausing || isCompleting;
+
   return (
     <section className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
       {/* Pause/Resume Action (Secondary/Outline) */}
       <button
         onClick={onPauseToggle}
-        disabled={disabled || isPausing || isCompleting}
+        data-testid="focus-pause-btn"
+        disabled={isButtonsDisabled}
         className="flex flex-col items-center justify-center gap-1 w-full border-2 border-[#4F46E5] rounded-lg p-4 bg-transparent text-[#4F46E5] hover:bg-[#f5f2ff] hover:scale-[1.01] transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-[rgba(79,70,229,0.15)] disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <span className="text-[18px] font-medium font-sans">
@@ -34,7 +39,8 @@ export function FocusActions({
       {/* Complete Action (Primary/Solid) */}
       <button
         onClick={onComplete}
-        disabled={disabled || isPausing || isCompleting}
+        data-testid="focus-complete-btn"
+        disabled={isButtonsDisabled}
         className="flex flex-col items-center justify-center gap-1 w-full bg-[#4F46E5] hover:bg-[#4338ca] rounded-lg p-4 text-white shadow-sm hover:scale-[1.01] hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-[rgba(79,70,229,0.15)] disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <span className="text-[18px] font-medium font-sans">

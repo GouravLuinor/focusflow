@@ -30,12 +30,77 @@ export interface AccessibilitySettings {
   fontSize: 'sm' | 'base' | 'lg' | 'xl' | '2xl';
   highContrast: boolean;
   zenMode: boolean;
+  darkMode: boolean;
 
   // NEW FOR DYSLEXIA
   dyslexiaFont: boolean;
   lineSpacing: 'normal' | 'relaxed' | 'loose';
   letterSpacing: 'normal' | 'wide' | 'wider';
+
+  // NEW FIELDS FOR MODE SUPPORT
+  sessionDefaultMinutes: number;
+  showExplicitDependencies: boolean;
+  reducedTextDensity: boolean;
 }
+
+export const getAccessibilityDefaults = (mode: SupportMode): AccessibilitySettings => {
+  const isDarkStored = localStorage.getItem('darkMode') === 'true';
+
+  if (mode === 'adhd') {
+    return {
+      fontSize: 'base',
+      highContrast: false,
+      zenMode: true,
+      darkMode: isDarkStored,
+      dyslexiaFont: false,
+      lineSpacing: 'normal',
+      letterSpacing: 'normal',
+      sessionDefaultMinutes: 25,
+      showExplicitDependencies: false,
+      reducedTextDensity: false,
+    };
+  }
+  if (mode === 'autism') {
+    return {
+      fontSize: 'base',
+      highContrast: false,
+      zenMode: false,
+      darkMode: isDarkStored,
+      dyslexiaFont: false,
+      lineSpacing: 'normal',
+      letterSpacing: 'normal',
+      sessionDefaultMinutes: 45,
+      showExplicitDependencies: true,
+      reducedTextDensity: false,
+    };
+  }
+  if (mode === 'dyslexia') {
+    return {
+      fontSize: 'lg',
+      highContrast: false,
+      zenMode: false,
+      darkMode: isDarkStored,
+      dyslexiaFont: true,
+      lineSpacing: 'relaxed',
+      letterSpacing: 'wide',
+      sessionDefaultMinutes: 45,
+      showExplicitDependencies: false,
+      reducedTextDensity: true,
+    };
+  }
+  return {
+    fontSize: 'base',
+    highContrast: false,
+    zenMode: false,
+    darkMode: isDarkStored,
+    dyslexiaFont: false,
+    lineSpacing: 'normal',
+    letterSpacing: 'normal',
+    sessionDefaultMinutes: 45,
+    showExplicitDependencies: false,
+    reducedTextDensity: false,
+  };
+};
 
 
 interface AppContextType {
@@ -64,15 +129,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
 
-  const [accessibility, setAccessibility] = useState<AccessibilitySettings>({
-    fontSize: 'base',
-    highContrast: false,
-    zenMode: false,
-
-    dyslexiaFont: true,
-    lineSpacing: 'relaxed',
-    letterSpacing: 'wide',
-  });
+  const [accessibility, setAccessibility] = useState<AccessibilitySettings>(getAccessibilityDefaults(null));
 
 
   /* ---------------------------
@@ -101,9 +158,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     /* ---------------- Dyslexia Font ---------------- */
     if (accessibility.dyslexiaFont) {
-      root.classList.add("font-lexend");
-    } else {
       root.classList.remove("font-lexend");
+      root.classList.add("font-opendyslexic");
+    } else {
+      root.classList.remove("font-opendyslexic");
+      root.classList.add("font-lexend");
     }
 
     /* ---------------- Line Spacing ---------------- */
@@ -113,6 +172,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     /* ---------------- Letter Spacing ---------------- */
     root.classList.remove("tracking-normal", "tracking-wide", "tracking-wider");
     root.classList.add(`tracking-${accessibility.letterSpacing}`);
+
+    /* ---------------- Dark Mode ---------------- */
+    if (accessibility.darkMode) {
+      root.classList.add('dark');
+      localStorage.setItem('darkMode', 'true');
+    } else {
+      root.classList.remove('dark');
+      localStorage.setItem('darkMode', 'false');
+    }
 
   }, [accessibility]);
 

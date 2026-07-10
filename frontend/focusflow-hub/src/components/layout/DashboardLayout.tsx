@@ -18,7 +18,7 @@ const mobileNavItems = [
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <div className="bg-[#FAF9F7] text-[#1A1A1A] antialiased min-h-screen flex flex-col md:flex-row overflow-x-hidden font-sans">
+    <div className="bg-[#FAF9F7] dark:bg-dark-background text-[#1A1A1A] dark:text-dark-text-primary antialiased min-h-screen flex flex-col md:flex-row overflow-x-hidden font-sans">
       {/* Desktop Sidebar */}
       <Sidebar />
 
@@ -31,7 +31,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </main>
 
       {/* Bottom Nav (Mobile Only) */}
-      <nav className="md:hidden fixed bottom-0 w-full h-16 bg-white border-t border-[#E8E6E1] flex justify-around items-center px-4 pb-safe z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+      <nav className="md:hidden fixed bottom-0 w-full h-16 bg-white dark:bg-dark-surface border-t border-[#E8E6E1] dark:border-dark-border flex justify-around items-center px-4 pb-safe z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
         {mobileNavItems.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
@@ -39,7 +39,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             className={({ isActive }) =>
               cn(
                 'flex flex-col items-center justify-center w-16 h-full transition-colors relative',
-                isActive ? 'text-[#4F46E5]' : 'text-[#9E988E]'
+                isActive ? 'text-[#4F46E5]' : 'text-[#9E988E] dark:text-dark-text-secondary'
               )
             }
           >

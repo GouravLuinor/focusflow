@@ -63,3 +63,64 @@ def ai_generate_steps(
     )
 
     return task_with_steps
+
+
+from pydantic import BaseModel
+from fastapi import HTTPException
+from datetime import datetime, timedelta
+import json
+import re
+
+
+class ParseTaskRequest(BaseModel):
+    text: str
+
+
+@router.post("/parse-task")
+async def parse_task_text(request: ParseTaskRequest, current_user=Depends(get_current_user)):
+    """Use Gemini to parse natural language into structured task data."""
+    tomorrow_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+    prompt = f"""Parse this task description into structured fields.
+
+User said: "{request.text}"
+
+Return ONLY a JSON object with these fields:
+{{
+  "title": "clean task title without time/priority/deadline words",
+  "estimated_minutes": number or null,
+  "priority": "LOW" | "MEDIUM" | "HIGH" | "URGENT" | null,
+  "deadline": "YYYY-MM-DD" or null
+}}
+
+Rules:
+- Extract the core task, remove filler words like "I need to", "maybe", "should"
+- For time: "half an hour" = 30, "an hour" = 60, "2 hours" = 120
+- For priority: "urgent" = URGENT, "important" = HIGH, "whenever" = LOW
+- For deadline: "tomorrow" = {tomorrow_date}, "next Friday" = next occurrence
+- If unsure about any field, set it to null
+- Return ONLY the JSON, no markdown, no explanation"""
+
+    # Use existing Gemini client from ai_service
+    from app.services.ai_service import _get_ai_client
+    
+    client = _get_ai_client()
+    if client is None:
+        raise HTTPException(status_code=503, detail="AI service not available")
+    
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt,
+        )
+        
+        text = response.text.strip()
+        # Extract JSON from response
+        json_match = re.search(r'\{.*\}', text, re.DOTALL)
+        if json_match:
+            return json.loads(json_match.group(0))
+    except Exception as e:
+        print(f"Gemini API error during task parsing: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    return {"title": request.text, "estimated_minutes": None, "priority": None, "deadline": None}
+

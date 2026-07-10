@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertCircle, Plus } from 'lucide-react';
+import { AlertCircle, Plus, Loader2 } from 'lucide-react';
+import { useVoiceInput } from '@/hooks/useVoiceInput';
+import { VoiceInputButton } from '@/components/shared/VoiceInputButton';
+import { quickParse, aiParse } from '@/lib/voiceParser';
 
 import {
   Dialog,
@@ -9,16 +12,26 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { apiRequest } from '@/lib/api';
+import { useApp } from '@/contexts/AppContext';
 
 interface CreateTaskDialogProps {
   open: boolean;
   onClose: () => void;
   defaultGoalId?: number;
+  defaultParentTaskId?: number;
+  defaultTitle?: string;
 }
 
 type Priority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 
-export function CreateTaskDialog({ open, onClose, defaultGoalId }: CreateTaskDialogProps) {
+export function CreateTaskDialog({
+  open,
+  onClose,
+  defaultGoalId,
+  defaultParentTaskId,
+  defaultTitle,
+}: CreateTaskDialogProps) {
+  const { supportMode } = useApp();
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -29,6 +42,46 @@ export function CreateTaskDialog({ open, onClose, defaultGoalId }: CreateTaskDia
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const {
+    isRecording,
+    isProcessing,
+    error: voiceError,
+    startRecording,
+    stopRecording,
+  } = useVoiceInput();
+
+  const [rawTranscript, setRawTranscript] = useState<string | null>(null);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [enhancedStatus, setEnhancedStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  const handleAIEnhance = async () => {
+    if (!rawTranscript) return;
+    setIsEnhancing(true);
+    setAiError(null);
+    setEnhancedStatus('idle');
+    try {
+      const parsed = await aiParse(rawTranscript);
+      if (parsed.title) setTitle(parsed.title);
+      if (parsed.estimatedMinutes !== null) {
+        setEstimatedMinutes(parsed.estimatedMinutes.toString());
+      }
+      if (parsed.priority) {
+        setPriority(parsed.priority as Priority);
+      }
+      setEnhancedStatus('success');
+      setTimeout(() => {
+        setRawTranscript(null);
+        setEnhancedStatus('idle');
+      }, 1500);
+    } catch {
+      setEnhancedStatus('error');
+      setAiError('AI enhancement unavailable');
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
   // Fetch active goals for dropdown selection
   const { data: goals } = useQuery<any[]>({
     queryKey: ['goals', 'active'],
@@ -36,7 +89,7 @@ export function CreateTaskDialog({ open, onClose, defaultGoalId }: CreateTaskDia
     enabled: open,
   });
 
-  // Pre-fill goalId if defaultGoalId changes or dialog opens
+  // Pre-fill fields if defaults change or dialog opens
   useEffect(() => {
     if (open) {
       if (defaultGoalId) {
@@ -44,8 +97,20 @@ export function CreateTaskDialog({ open, onClose, defaultGoalId }: CreateTaskDia
       } else {
         setGoalId('');
       }
+      if (defaultTitle) {
+        setTitle(defaultTitle);
+      } else {
+        setTitle('');
+      }
+      
+      // Default estimated time is 25m in ADHD mode
+      if (supportMode === 'adhd') {
+        setEstimatedMinutes('25');
+      } else {
+        setEstimatedMinutes('');
+      }
     }
-  }, [open, defaultGoalId]);
+  }, [open, defaultGoalId, defaultTitle, supportMode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,10 +125,11 @@ export function CreateTaskDialog({ open, onClose, defaultGoalId }: CreateTaskDia
     try {
       const payload = {
         title: title.trim(),
-        description: description.trim() || null,
+        description: description.trim() || '',
         estimated_minutes: estimatedMinutes ? parseInt(estimatedMinutes, 10) : null,
         priority,
         goal_id: goalId ? parseInt(goalId, 10) : null,
+        parent_task_id: defaultParentTaskId || null,
       };
 
       await apiRequest('/tasks/', {
@@ -81,7 +147,7 @@ export function CreateTaskDialog({ open, onClose, defaultGoalId }: CreateTaskDia
       // Invalidate queries to refresh lists and timeline
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['tasks', 'executable'] });
-      queryClient.invalidateQueries({ queryKey: ['schedule', 'blocks'] });
+      queryClient.invalidateQueries({ queryKey: ['schedule'] });
 
       // Invalidate the goal detail tasks list if goal_id was specified
       if (payload.goal_id) {
@@ -95,6 +161,22 @@ export function CreateTaskDialog({ open, onClose, defaultGoalId }: CreateTaskDia
       setIsLoading(false);
     }
   };
+
+  // Reset form and error states when the dialog is closed
+  useEffect(() => {
+    if (!open) {
+      setTitle('');
+      setDescription('');
+      setEstimatedMinutes('');
+      setPriority('MEDIUM');
+      setGoalId('');
+      setError(null);
+      setRawTranscript(null);
+      setIsEnhancing(false);
+      setEnhancedStatus('idle');
+      setAiError(null);
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={(val) => { if (!val) onClose(); }}>
@@ -119,16 +201,72 @@ export function CreateTaskDialog({ open, onClose, defaultGoalId }: CreateTaskDia
             <label className="text-[12px] font-medium text-[#6B6660]" htmlFor="task-title">
               Task Title <span className="text-[#D97706]">*</span>
             </label>
-            <input
-              id="task-title"
-              type="text"
-              required
-              disabled={isLoading}
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Relational Model Revision"
-              className="w-full border border-[#E8E6E1] focus:border-[#4F46E5] focus:ring-[#4F46E5] rounded-lg p-3 text-[14px] outline-none transition-all focus:ring-1"
-            />
+            <div className="relative">
+              <input
+                id="task-title"
+                data-testid="task-title-input"
+                type="text"
+                required
+                disabled={isLoading || isProcessing}
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setRawTranscript(null); // Manual typing clears raw transcript and hides AI button
+                }}
+                placeholder="e.g., Relational Model Revision"
+                className="w-full border border-[#E8E6E1] focus:border-[#4F46E5] focus:ring-[#4F46E5] rounded-lg p-3 pr-12 text-[14px] outline-none transition-all focus:ring-1"
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                <VoiceInputButton
+                  isRecording={isRecording}
+                  isProcessing={isProcessing}
+                  disabled={isLoading}
+                  onStart={startRecording}
+                  onStop={async () => {
+                    const text = await stopRecording();
+                    if (text) {
+                      setRawTranscript(text);
+                      const parsed = quickParse(text);
+                      setTitle(parsed.title);
+                      if (parsed.estimatedMinutes !== null) {
+                        setEstimatedMinutes(parsed.estimatedMinutes.toString());
+                      }
+                      if (parsed.priority) {
+                        setPriority(parsed.priority as Priority);
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            {rawTranscript && (
+              <div className="flex items-center gap-2 mt-1">
+                {isEnhancing ? (
+                  <span className="text-[12px] font-medium text-[#D97706] flex items-center gap-1">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Enhancing...
+                  </span>
+                ) : enhancedStatus === 'success' ? (
+                  <span className="text-[12px] font-medium text-emerald-600 flex items-center gap-1">
+                    ✓ Enhanced
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleAIEnhance}
+                    className="text-[12px] font-medium text-[#4F46E5] hover:text-[#4338ca] hover:underline flex items-center gap-1"
+                  >
+                    ✨ Enhance with AI
+                  </button>
+                )}
+                {aiError && (
+                  <span className="text-[12px] text-[#D97706]">({aiError})</span>
+                )}
+              </div>
+            )}
+            {voiceError && (
+              <p className="text-[12px] text-[#D97706]">{voiceError}</p>
+            )}
           </div>
 
           {/* Task Description */}
@@ -171,6 +309,7 @@ export function CreateTaskDialog({ open, onClose, defaultGoalId }: CreateTaskDia
             </label>
             <select
               id="task-priority"
+              data-testid="task-priority-select"
               disabled={isLoading}
               value={priority}
               onChange={(e) => setPriority(e.target.value as Priority)}
@@ -216,6 +355,7 @@ export function CreateTaskDialog({ open, onClose, defaultGoalId }: CreateTaskDia
             </button>
             <button
               type="submit"
+              data-testid="task-submit-btn"
               disabled={isLoading}
               className="px-5 py-2.5 bg-[#4F46E5] hover:bg-[#4338ca] text-white rounded-lg text-[14px] font-medium flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
             >

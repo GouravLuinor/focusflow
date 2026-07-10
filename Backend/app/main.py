@@ -13,6 +13,7 @@ from app.api.dependency import router as dependency_router
 from app.api.schedule import router as schedule_router
 from app.api.execution import router as execution_router
 from app.api.ai_jobs import router as ai_jobs_router
+from app.api.voice import router as voice_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
@@ -46,6 +47,7 @@ app.include_router(dependency_router)
 app.include_router(schedule_router)
 app.include_router(execution_router)
 app.include_router(ai_jobs_router)
+app.include_router(voice_router)
 
 # DO NOT put /api/ prefixes here if they are already in the auth.py file!
 

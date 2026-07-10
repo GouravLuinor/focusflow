@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { AppProvider, useApp } from "./contexts/AppContext";
+import { AppProvider, useApp, getAccessibilityDefaults } from "./contexts/AppContext";
 import { apiRequest } from "@/lib/api";
 
 import Landing from "./pages/Landing";
@@ -29,7 +29,7 @@ function HomeRoute() {
 }
 
 function AppInitializer() {
-  const { setUser } = useApp();
+  const { setUser, setSupportMode, setOnboardingComplete, setAccessibility } = useApp();
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
@@ -43,6 +43,19 @@ function AppInitializer() {
       try {
         const user = await apiRequest("/auth/me");
         setUser(user);
+
+        // Fetch profile to sync support mode and accessibility settings
+        try {
+          const profile = await apiRequest("/profile/me");
+          const mode = profile.support_mode === "none" ? null : profile.support_mode;
+          setSupportMode(mode);
+          setOnboardingComplete(profile.onboarding_completed);
+          
+          const defaults = getAccessibilityDefaults(mode);
+          setAccessibility(defaults);
+        } catch (profileErr) {
+          console.error("Failed to restore profile:", profileErr);
+        }
       } catch {
         localStorage.removeItem("token");
       } finally {
@@ -51,7 +64,7 @@ function AppInitializer() {
     }
 
     restoreSession();
-  }, [setUser]);
+  }, [setUser, setSupportMode, setOnboardingComplete, setAccessibility]);
 
   if (isInitializing) {
     return (

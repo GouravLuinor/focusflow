@@ -152,7 +152,7 @@ def get_task_estimate(
         ExecutionSession.status == "COMPLETED",
     ).order_by(ExecutionSession.ended_at.desc()).all()
     
-    user_estimate_minutes = getattr(task, "estimated_minutes", None)
+    user_estimate_minutes = task.estimated_minutes
     return calculate_adjusted_estimate(user_estimate_minutes, completed)
 
 
@@ -184,7 +184,7 @@ def get_focus_mode(
     ).order_by(ExecutionSession.ended_at.desc()).all()
     
     # Get adaptive estimate
-    user_estimate_minutes = getattr(task, "estimated_minutes", None)
+    user_estimate_minutes = task.estimated_minutes
     estimate = calculate_adjusted_estimate(user_estimate_minutes, completed_sessions)
     
     # Get subtask progress
@@ -243,7 +243,7 @@ def get_focus_mode(
         "title": task.title,
         "description": task.description,
         "status": status,
-        "priority": getattr(task, "priority", "MEDIUM") or "MEDIUM",
+        "priority": task.priority or "MEDIUM",
         "estimated_minutes": user_estimate_minutes,
         "adjusted_estimate_minutes": estimate["adjusted_minutes"],
         "estimate_confidence": estimate["confidence"],

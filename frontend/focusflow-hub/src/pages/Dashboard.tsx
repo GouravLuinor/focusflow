@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 
 import { useApp } from '@/contexts/AppContext';
 import { apiRequest } from '@/lib/api';
+import { cn } from '@/lib/utils';
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { GreetingHeader } from '@/components/dashboard/GreetingHeader';
@@ -18,7 +19,7 @@ import { type ScheduleBlock } from '@/components/dashboard/ScheduleBlockCard';
 
 interface Profile {
   onboarding_completed: boolean;
-  support_mode: 'adhd' | 'autism' | 'dyslexia' | null;
+  support_mode: 'adhd' | 'autism' | 'dyslexia' | 'none' | null;
   available_minutes?: number;
 }
 
@@ -52,7 +53,7 @@ function CardSkeleton({ className = '' }: { className?: string }) {
 const AVAILABLE_MINUTES = 90;
 
 export default function Dashboard() {
-  const { isAuthenticated, user } = useApp();
+  const { isAuthenticated, user, supportMode } = useApp();
 
   /* ── All hooks unconditionally up-front ──────────────────── */
 
@@ -94,6 +95,14 @@ export default function Dashboard() {
   const { data: executableTasks, isLoading: tasksLoading } = useQuery<ExecutableTask[]>({
     queryKey: ['tasks', 'executable'],
     queryFn: () => apiRequest('/tasks/executable'),
+    retry: 1,
+    staleTime: 60 * 1000,
+    enabled: isAuthenticated && !!profile,
+  });
+
+  const { data: allTasks } = useQuery<any[]>({
+    queryKey: ['tasks', 'all'],
+    queryFn: () => apiRequest('/tasks/'),
     retry: 1,
     staleTime: 60 * 1000,
     enabled: isAuthenticated && !!profile,
@@ -174,8 +183,8 @@ export default function Dashboard() {
 
         {/* Two Column Layout */}
         <div className="max-w-[1080px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* LEFT COLUMN (55%) */}
-          <div className="lg:col-span-7 flex flex-col gap-8">
+          {/* LEFT COLUMN (55% or 100% in ADHD mode) */}
+          <div className={cn(supportMode === 'adhd' ? "lg:col-span-12" : "lg:col-span-7", "flex flex-col gap-8")}>
             {/* Next Best Action Card */}
             {bestTask ? (
               <NextBestActionCard task={bestTask} />
@@ -186,21 +195,23 @@ export default function Dashboard() {
             )}
 
             {/* Today's Plan Section */}
-            <TodaysPlanSection blocks={blocks} />
+            <TodaysPlanSection blocks={blocks} tasks={allTasks || []} />
           </div>
 
-          {/* RIGHT COLUMN (45%) */}
-          <div className="lg:col-span-5 flex flex-col gap-8">
-            {/* Active Goals */}
-            <ActiveGoalsSection goals={goals} />
+          {/* RIGHT COLUMN (45% - Hidden in ADHD mode) */}
+          {supportMode !== 'adhd' && (
+            <div className="lg:col-span-5 flex flex-col gap-8">
+              {/* Active Goals */}
+              <ActiveGoalsSection goals={goals} />
 
-            {/* Quick Stats */}
-            <QuickStats
-              completedCount={completedCount}
-              focusMinutes={focusMinutes}
-              dayStreak={dayStreak}
-            />
-          </div>
+              {/* Quick Stats */}
+              <QuickStats
+                completedCount={completedCount}
+                focusMinutes={focusMinutes}
+                dayStreak={dayStreak}
+              />
+            </div>
+          )}
         </div>
       </motion.div>
     </DashboardLayout>

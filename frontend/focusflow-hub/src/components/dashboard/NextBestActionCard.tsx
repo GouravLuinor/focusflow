@@ -75,8 +75,8 @@ export function NextBestActionCard({ task }: NextBestActionCardProps) {
           </div>
 
           {reasons.length > 0 && (
-            <div className="bg-[#FAF9F7] rounded-lg p-4 mt-2">
-              <p className="text-[12px] font-medium text-[#6B6660] mb-2 font-sans">
+            <div className="bg-[#EEF2FF] rounded-lg p-4 mt-2 border border-[#E0E7FF]">
+              <p className="text-[12px] font-semibold text-[#4F46E5] uppercase tracking-wider mb-2 font-sans">
                 Recommended because:
               </p>
               <ul className="space-y-2">

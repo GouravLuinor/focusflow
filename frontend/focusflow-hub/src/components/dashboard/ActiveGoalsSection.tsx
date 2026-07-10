@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { GoalCard, type Goal } from './GoalCard';
+export type { Goal };
 import { CreateGoalDialog } from './CreateGoalDialog';
 
 interface ActiveGoalsSectionProps {
@@ -30,6 +31,7 @@ export function ActiveGoalsSection({ goals }: ActiveGoalsSectionProps) {
           Active Goals
         </h3>
         <button
+          data-testid="create-goal-btn"
           onClick={() => setShowCreateGoal(true)}
           className="w-6 h-6 rounded-full bg-[#4F46E5]/10 hover:bg-[#4F46E5]/20 text-[#4F46E5] flex items-center justify-center transition-colors"
           title="Create New Goal"

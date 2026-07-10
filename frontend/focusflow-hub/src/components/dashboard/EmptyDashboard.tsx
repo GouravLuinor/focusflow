@@ -68,6 +68,7 @@ export function EmptyDashboard({ name }: EmptyDashboardProps) {
             </p>
 
             <button
+              data-testid="create-task-btn"
               onClick={() => setShowCreateTask(true)}
               className="bg-[#4F46E5] hover:bg-[#4338ca] text-white font-medium py-3 px-6 rounded-lg flex items-center justify-center gap-2 hover:scale-105 active:scale-95 duration-200 transition-all shadow-sm hover:shadow-md relative overflow-hidden text-[12px] font-sans"
             >
@@ -112,6 +113,7 @@ export function EmptyDashboard({ name }: EmptyDashboardProps) {
             Current Goals
           </h2>
           <div
+            data-testid="create-goal-btn"
             onClick={() => setShowCreateGoal(true)}
             className="flex-1 bg-white border border-[#E8E6E1] border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center min-h-[300px] hover:border-[#4F46E5]/40 hover:bg-[#4F46E5]/5 transition-all duration-300 group cursor-pointer"
           >
@@ -125,6 +127,7 @@ export function EmptyDashboard({ name }: EmptyDashboardProps) {
               Set a milestone to track your progress.
             </p>
             <button
+              data-testid="create-goal-btn"
               onClick={(e) => {
                 e.stopPropagation();
                 setShowCreateGoal(true);

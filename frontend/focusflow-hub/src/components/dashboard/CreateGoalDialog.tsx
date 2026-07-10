@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { AlertCircle, Calendar, Plus } from 'lucide-react';
+import { AlertCircle, Calendar, Plus, Loader2 } from 'lucide-react';
+import { useVoiceInput } from '@/hooks/useVoiceInput';
+import { VoiceInputButton } from '@/components/shared/VoiceInputButton';
+import { quickParse, aiParse } from '@/lib/voiceParser';
 
 import {
   Dialog,
@@ -23,9 +26,49 @@ export function CreateGoalDialog({ open, onClose }: CreateGoalDialogProps) {
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<Priority>('MEDIUM');
   const [deadline, setDeadline] = useState('');
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const {
+    isRecording,
+    isProcessing,
+    error: voiceError,
+    startRecording,
+    stopRecording,
+  } = useVoiceInput();
+
+  const [rawTranscript, setRawTranscript] = useState<string | null>(null);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [enhancedStatus, setEnhancedStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  const handleAIEnhance = async () => {
+    if (!rawTranscript) return;
+    setIsEnhancing(true);
+    setAiError(null);
+    setEnhancedStatus('idle');
+    try {
+      const parsed = await aiParse(rawTranscript);
+      if (parsed.title) setTitle(parsed.title);
+      if (parsed.priority) {
+        setPriority(parsed.priority as Priority);
+      }
+      if (parsed.deadline) {
+        setDeadline(parsed.deadline);
+      }
+      setEnhancedStatus('success');
+      setTimeout(() => {
+        setRawTranscript(null);
+        setEnhancedStatus('idle');
+      }, 1500);
+    } catch {
+      setEnhancedStatus('error');
+      setAiError('AI enhancement unavailable');
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +100,7 @@ export function CreateGoalDialog({ open, onClose }: CreateGoalDialogProps) {
       setDeadline('');
       
       // Invalidate queries to refresh dashboard
-      queryClient.invalidateQueries({ queryKey: ['goals', 'active'] });
+      queryClient.invalidateQueries({ queryKey: ['goals'] });
       
       onClose();
     } catch (err) {
@@ -66,6 +109,21 @@ export function CreateGoalDialog({ open, onClose }: CreateGoalDialogProps) {
       setIsLoading(false);
     }
   };
+
+  // Reset form and error states when the dialog is closed
+  useEffect(() => {
+    if (!open) {
+      setTitle('');
+      setDescription('');
+      setPriority('MEDIUM');
+      setDeadline('');
+      setError(null);
+      setRawTranscript(null);
+      setIsEnhancing(false);
+      setEnhancedStatus('idle');
+      setAiError(null);
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={(val) => { if (!val) onClose(); }}>
@@ -90,16 +148,72 @@ export function CreateGoalDialog({ open, onClose }: CreateGoalDialogProps) {
             <label className="text-[12px] font-medium text-[#6B6660]" htmlFor="goal-title">
               Goal Title <span className="text-[#D97706]">*</span>
             </label>
-            <input
-              id="goal-title"
-              type="text"
-              required
-              disabled={isLoading}
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Prepare for DBMS exam"
-              className="w-full border border-[#E8E6E1] focus:border-[#4F46E5] focus:ring-[#4F46E5] rounded-lg p-3 text-[14px] outline-none transition-all focus:ring-1"
-            />
+            <div className="relative">
+              <input
+                id="goal-title"
+                data-testid="goal-title-input"
+                type="text"
+                required
+                disabled={isLoading || isProcessing}
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setRawTranscript(null); // Manual typing clears raw transcript and hides AI button
+                }}
+                placeholder="e.g., Prepare for DBMS exam"
+                className="w-full border border-[#E8E6E1] focus:border-[#4F46E5] focus:ring-[#4F46E5] rounded-lg p-3 pr-12 text-[14px] outline-none transition-all focus:ring-1"
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                <VoiceInputButton
+                  isRecording={isRecording}
+                  isProcessing={isProcessing}
+                  disabled={isLoading}
+                  onStart={startRecording}
+                  onStop={async () => {
+                    const text = await stopRecording();
+                    if (text) {
+                      setRawTranscript(text);
+                      const parsed = quickParse(text);
+                      setTitle(parsed.title);
+                      if (parsed.priority) {
+                        setPriority(parsed.priority as Priority);
+                      }
+                      if (parsed.deadline) {
+                        setDeadline(parsed.deadline);
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            {rawTranscript && (
+              <div className="flex items-center gap-2 mt-1">
+                {isEnhancing ? (
+                  <span className="text-[12px] font-medium text-[#D97706] flex items-center gap-1">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Enhancing...
+                  </span>
+                ) : enhancedStatus === 'success' ? (
+                  <span className="text-[12px] font-medium text-emerald-600 flex items-center gap-1">
+                    ✓ Enhanced
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleAIEnhance}
+                    className="text-[12px] font-medium text-[#4F46E5] hover:text-[#4338ca] hover:underline flex items-center gap-1"
+                  >
+                    ✨ Enhance with AI
+                  </button>
+                )}
+                {aiError && (
+                  <span className="text-[12px] text-[#D97706]">({aiError})</span>
+                )}
+              </div>
+            )}
+            {voiceError && (
+              <p className="text-[12px] text-[#D97706]">{voiceError}</p>
+            )}
           </div>
 
           {/* Goal Description */}
@@ -125,6 +239,7 @@ export function CreateGoalDialog({ open, onClose }: CreateGoalDialogProps) {
             </label>
             <select
               id="goal-priority"
+              data-testid="goal-priority-select"
               disabled={isLoading}
               value={priority}
               onChange={(e) => setPriority(e.target.value as Priority)}
@@ -166,6 +281,7 @@ export function CreateGoalDialog({ open, onClose }: CreateGoalDialogProps) {
             </button>
             <button
               type="submit"
+              data-testid="goal-submit-btn"
               disabled={isLoading}
               className="px-5 py-2.5 bg-[#4F46E5] hover:bg-[#4338ca] text-white rounded-lg text-[14px] font-medium flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
             >

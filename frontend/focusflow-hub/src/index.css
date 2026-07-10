@@ -285,8 +285,63 @@
     word-spacing: 0.1em;
   }
 
+  /* Font family overrides */
+  .font-opendyslexic {
+    font-family: 'OpenDyslexic', sans-serif !important;
+  }
+  
+  .font-lexend {
+    font-family: 'Lexend', sans-serif !important;
+  }
+
   /* Smooth scroll */
   .scroll-smooth {
     scroll-behavior: smooth;
   }
+}
+
+/* Dark Mode Global Overrides */
+.dark body {
+  background-color: #0F0F1A !important;
+}
+
+.dark .bg-surface,
+.dark [class*="bg-white"] {
+  background-color: #1A1A2E !important;
+}
+
+.dark .border-border,
+.dark [class*="border-[#E8E6E1]"] {
+  border-color: #2A2A45 !important;
+}
+
+.dark .text-text-primary,
+.dark [class*="text-[#1A1A1A]"] {
+  color: #F0EDF5 !important;
+}
+
+.dark .text-text-secondary,
+.dark [class*="text-[#6B6660]"] {
+  color: #9E98AE !important;
+}
+
+.dark .text-text-muted,
+.dark [class*="text-[#9E988E]"] {
+  color: #6B6680 !important;
+}
+
+.dark [class*="bg-[#FAF9F7]"] {
+  background-color: #0F0F1A !important;
+}
+
+.dark [class*="hover:bg-[#FAF9F7]"]:hover {
+  background-color: #242440 !important;
+}
+
+.dark select,
+.dark input,
+.dark textarea {
+  background-color: #0F0F1A !important;
+  color: #F0EDF5 !important;
+  border-color: #2A2A45 !important;
 }

@@ -82,6 +82,15 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        dark: {
+          background: '#0F0F1A',      // Deep navy-black
+          surface: '#1A1A2E',          // Card backgrounds
+          'surface-elevated': '#242440', // Elevated cards
+          border: '#2A2A45',           // Subtle borders
+          'text-primary': '#F0EDF5',   // Primary text
+          'text-secondary': '#9E98AE', // Secondary text
+          'text-muted': '#6B6680',     // Muted text
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

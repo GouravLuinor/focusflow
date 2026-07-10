@@ -13,6 +13,8 @@ import { WeekOverview } from '@/components/schedule/WeekOverview';
 import { QuickActions } from '@/components/schedule/QuickActions';
 import { ScheduleEmptyState } from '@/components/schedule/ScheduleEmptyState';
 import { apiRequest } from '@/lib/api';
+import { useApp } from '@/contexts/AppContext';
+import { cn } from '@/lib/utils';
 
 interface ScheduleBlock {
   id: number;
@@ -41,7 +43,9 @@ interface Goal {
 export default function ScheduleView() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { supportMode } = useApp();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [activeTab, setActiveTab] = useState<'today' | 'week'>(supportMode === 'autism' ? 'week' : 'today');
 
   // 1. Fetch Schedule Blocks
   const { data: rawBlocks, isLoading: blocksLoading, error: blocksError } = useQuery<ScheduleBlock[]>({
@@ -73,7 +77,7 @@ export default function ScheduleView() {
         }),
       });
       // Invalidate queries to refresh the schedule timeline
-      queryClient.invalidateQueries({ queryKey: ['schedule', 'blocks'] });
+      queryClient.invalidateQueries({ queryKey: ['schedule'] });
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to generate schedule.");
     } finally {
@@ -172,7 +176,16 @@ export default function ScheduleView() {
       priority,
       goal: goalTitle,
       status: block.status,
+      scheduled_start: block.scheduled_start,
+      scheduled_end: block.scheduled_end,
     };
+  });
+
+  const blocksByDay = Array.from({ length: 7 }, () => [] as BlockItem[]);
+  blockItems.forEach(item => {
+    const date = new Date(item.scheduled_start);
+    const dayIndex = (date.getDay() + 6) % 7; // Monday is 0, Sunday is 6
+    blocksByDay[dayIndex].push(item);
   });
 
   // Interleave and compute buffers between consecutive blocks
@@ -233,8 +246,31 @@ export default function ScheduleView() {
           {/* Schedule Header */}
           <ScheduleHeader />
 
-          {/* Grid Columns */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          {/* View Toggle */}
+          <div className="flex justify-start mb-6 bg-[#eae6f4] p-1.5 rounded-lg w-fit">
+            <button
+              onClick={() => setActiveTab('today')}
+              className={cn(
+                "px-4 py-2 rounded-md text-[13px] font-medium transition-all font-sans",
+                activeTab === 'today' ? "bg-white text-[#4F46E5] shadow-sm" : "text-[#6B6660] hover:text-[#1A1A1A]"
+              )}
+            >
+              Today's Plan
+            </button>
+            <button
+              onClick={() => setActiveTab('week')}
+              className={cn(
+                "px-4 py-2 rounded-md text-[13px] font-medium transition-all font-sans",
+                activeTab === 'week' ? "bg-white text-[#4F46E5] shadow-sm" : "text-[#6B6660] hover:text-[#1A1A1A]"
+              )}
+            >
+              Week View
+            </button>
+          </div>
+
+          {activeTab === 'today' ? (
+            // Grid Columns
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             {/* Left Column (2/3): Timeline + Why This Plan */}
             <div className="lg:col-span-2 flex flex-col gap-8">
               {/* Timeline Container */}
@@ -283,6 +319,63 @@ export default function ScheduleView() {
               />
             </div>
           </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 font-sans">
+              {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((dayName, idx) => {
+                const dayBlocks = blocksByDay[idx];
+                const isToday = idx === (new Date().getDay() + 6) % 7;
+                
+                return (
+                  <div 
+                    key={dayName} 
+                    className={cn(
+                      "bg-white border rounded-xl p-5 flex flex-col gap-4 shadow-sm transition-all duration-200",
+                      isToday ? "border-[#4F46E5] ring-2 ring-[#4F46E5]/10" : "border-[#E8E6E1]"
+                    )}
+                  >
+                    <div className="flex justify-between items-center pb-2 border-b border-[#E8E6E1]/50">
+                      <h4 className={cn("text-[16px] font-semibold", isToday ? "text-[#4F46E5]" : "text-[#1A1A1A]")}>
+                        {dayName}
+                      </h4>
+                      {isToday && (
+                        <span className="bg-[#4F46E5]/10 text-[#4F46E5] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          Today
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="flex flex-col gap-3 flex-1">
+                      {dayBlocks.length === 0 ? (
+                        <div className="text-[12px] text-[#9E988E] py-4 text-center">
+                          No tasks scheduled
+                        </div>
+                      ) : (
+                        dayBlocks.map(block => (
+                          <div 
+                            key={block.id} 
+                            className="p-3 border border-[#E8E6E1] rounded-lg bg-[#FAF9F7] flex flex-col gap-1 hover:border-[#4F46E5]/50 transition-colors"
+                          >
+                            <div className="flex justify-between items-start gap-2">
+                              <span className="text-[13px] font-semibold text-[#1A1A1A] line-clamp-2">
+                                {block.title}
+                              </span>
+                              <span className="text-[10px] text-[#6B6660] bg-white border border-[#E8E6E1] px-1.5 py-0.5 rounded shrink-0">
+                                {block.time}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center text-[11px] text-[#6B6660] mt-1">
+                              <span>{block.goal}</span>
+                              <span>{block.duration}</span>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </DashboardLayout>

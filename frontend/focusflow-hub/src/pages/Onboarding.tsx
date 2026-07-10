@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Brain, Calendar, Type, Waves, ArrowRight, Sparkles } from "lucide-react";
-import { useApp, SupportMode } from "@/contexts/AppContext";
+import { useQueryClient } from "@tanstack/react-query";
+import { useApp, SupportMode, getAccessibilityDefaults } from "@/contexts/AppContext";
 import { apiRequest } from "@/lib/api";
 
 interface SupportModeCard {
@@ -14,7 +15,8 @@ interface SupportModeCard {
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { setUser, setSupportMode, setOnboardingComplete } = useApp();
+  const queryClient = useQueryClient();
+  const { setUser, setSupportMode, setOnboardingComplete, setAccessibility } = useApp();
   const [selectedMode, setSelectedMode] = useState<SupportMode>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,8 +69,13 @@ export default function Onboarding() {
       });
 
       // 2. Sync frontend context
-      setSupportMode(profile.support_mode);
+      const mode = profile.support_mode === "none" ? null : profile.support_mode;
+      setSupportMode(mode);
       setOnboardingComplete(profile.onboarding_completed);
+      setAccessibility(getAccessibilityDefaults(mode));
+
+      // Invalidate query to trigger react-query update
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
 
       // 3. Fetch latest user details to sync context
       try {
@@ -87,8 +94,34 @@ export default function Onboarding() {
     }
   };
 
-  const handleSkip = () => {
-    navigate("/dashboard");
+  const handleSkip = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const profile = await apiRequest("/profile", {
+        method: "POST",
+        body: JSON.stringify({ support_mode: "none" }),
+      });
+      const mode = profile.support_mode === "none" ? null : profile.support_mode;
+      setSupportMode(mode);
+      setOnboardingComplete(profile.onboarding_completed);
+      setAccessibility(getAccessibilityDefaults(mode));
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+
+      // Fetch latest user details to sync context
+      try {
+        const user = await apiRequest("/auth/me");
+        setUser(user);
+      } catch (meErr) {
+        console.error("Failed to sync user data:", meErr);
+      }
+
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to initialize profile");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

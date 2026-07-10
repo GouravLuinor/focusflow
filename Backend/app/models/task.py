@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
+from datetime import datetime
 
 from app.db.base import Base
 
@@ -17,6 +18,13 @@ class Task(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     goal_id = Column(Integer, ForeignKey("goals.id"), nullable=True)
     parent_task_id = Column(Integer, ForeignKey("tasks.id"), nullable=True)
+
+    estimated_minutes = Column(Integer, nullable=True)
+    actual_minutes = Column(Integer, nullable=True)
+    priority = Column(String, default="MEDIUM")  # LOW, MEDIUM, HIGH, URGENT
+    deadline = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user = relationship("User", backref="tasks")
     goal = relationship("Goal", back_populates="tasks")

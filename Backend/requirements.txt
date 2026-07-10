@@ -78,3 +78,4 @@ alembic==1.18.5
 pytest==8.1.1
 celery==5.4.0
 redis==5.2.1
+faster-whisper>=1.0.0
