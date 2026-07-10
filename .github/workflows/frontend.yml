@@ -1,0 +1,119 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [main, antigravity-dev]
+    paths:
+      - 'frontend/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: frontend/focusflow-hub/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd frontend/focusflow-hub
+          npm ci
+      
+      - name: Run lint
+        run: |
+          cd frontend/focusflow-hub
+          npm run lint
+      
+      - name: Run build
+        run: |
+          cd frontend/focusflow-hub
+          npm run build
+      
+      - name: Run unit tests
+        run: |
+          cd frontend/focusflow-hub
+          npm test
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: lint-and-build
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: focusflow
+          POSTGRES_PASSWORD: focusflow_dev
+          POSTGRES_DB: focusflow
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: frontend/focusflow-hub/package-lock.json
+      
+      - name: Install backend dependencies
+        run: |
+          cd Backend
+          pip install -r requirements.txt
+      
+      - name: Install frontend dependencies
+        run: |
+          cd frontend/focusflow-hub
+          npm ci
+      
+      - name: Install Playwright browsers
+        run: |
+          cd frontend/focusflow-hub
+          npx playwright install chromium --with-deps
+      
+      - name: Setup backend
+        run: |
+          echo "SECRET_KEY=ci-test-secret" > Backend/.env
+          echo "DATABASE_URL=postgresql://focusflow:focusflow_dev@localhost:5432/focusflow" >> Backend/.env
+          echo "REDIS_URL=redis://localhost:6379/0" >> Backend/.env
+          cd Backend
+          alembic upgrade head
+      
+      - name: Start backend
+        run: |
+          cd Backend
+          uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          sleep 3
+      
+      - name: Start frontend
+        run: |
+          cd frontend/focusflow-hub
+          npm run dev &
+          sleep 5
+      
+      - name: Run E2E tests
+        run: |
+          cd frontend/focusflow-hub
+          npx playwright test tests/e2e/full-flow.spec.ts --reporter=list

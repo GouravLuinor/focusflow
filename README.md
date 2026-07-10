@@ -1,5 +1,8 @@
 # FocusFlow — Adaptive Workflow & Execution Platform
 
+[![Backend CI](https://github.com/GouravLuinor/focusflow/actions/workflows/backend.yml/badge.svg)](https://github.com/GouravLuinor/focusflow/actions/workflows/backend.yml)
+[![Frontend CI](https://github.com/GouravLuinor/focusflow/actions/workflows/frontend.yml/badge.svg)](https://github.com/GouravLuinor/focusflow/actions/workflows/frontend.yml)
+
 A full-stack workflow execution system that converts high-level goals into persistent, dependency-aware task graphs, dynamically schedules executable work based on deadlines and constraints, and learns from execution history to improve future plans.
 
 **Designed with neuro-inclusive principles for ADHD, Autism, and Dyslexia.**

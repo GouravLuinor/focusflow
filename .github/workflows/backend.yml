@@ -1,0 +1,69 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main, antigravity-dev]
+    paths:
+      - 'Backend/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'Backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: focusflow
+          POSTGRES_PASSWORD: focusflow_dev
+          POSTGRES_DB: focusflow
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: |
+          cd Backend
+          pip install -r requirements.txt
+      
+      - name: Create .env
+        run: |
+          echo "SECRET_KEY=ci-test-secret-key-for-github-actions" > Backend/.env
+          echo "DATABASE_URL=postgresql://focusflow:focusflow_dev@localhost:5432/focusflow" >> Backend/.env
+          echo "REDIS_URL=redis://localhost:6379/0" >> Backend/.env
+      
+      - name: Run migrations
+        run: |
+          cd Backend
+          alembic upgrade head
+      
+      - name: Run tests
+        run: |
+          cd Backend
+          python -m pytest tests/ -v --tb=short
