@@ -41,10 +41,18 @@ interface FocusTaskResponse {
     session_id: number;
     started_at: string;
     elapsed_seconds: number;
-  };
+    status: 'ACTIVE' | 'PAUSED';
+  } | null;
   blocking_tasks: BlockingTask[];
   unlocks_tasks: UnlocksTask[];
   available_actions: string[];
+}
+
+interface TaskEstimate {
+  original_minutes: number | null;
+  adjusted_minutes: number | null;
+  sample_count: number;
+  confidence: string;
 }
 
 function formatTime(totalSeconds: number): string {
@@ -72,7 +80,7 @@ export default function FocusMode() {
   const [isPausedState, setIsPausedState] = useState(false);
 
   // Fetch executable tasks ONLY if there is no taskId in URL params
-  const { data: executableTasks, isLoading: execLoading, error: execError } = useQuery<any[]>({
+  const { data: executableTasks, isLoading: execLoading, error: execError } = useQuery<{ id: number }[]>({
     queryKey: ['tasks', 'executable'],
     queryFn: () => apiRequest('/tasks/executable'),
     enabled: !taskId,
@@ -86,7 +94,7 @@ export default function FocusMode() {
   });
 
   // Fetch Estimate Data via TanStack Query (if taskId exists)
-  const { data: estimateData } = useQuery<any>({
+  const { data: estimateData } = useQuery<TaskEstimate>({
     queryKey: ['estimate', taskId],
     queryFn: () => apiRequest(`/tasks/${taskId}/estimate`),
     enabled: !!taskId,
@@ -109,13 +117,19 @@ export default function FocusMode() {
 
   // Sync state from server on mount / focusData change
   useEffect(() => {
-    if (focusData?.active_session) {
-      setSessionId(focusData.active_session.session_id);
-      setElapsedSeconds(focusData.active_session.elapsed_seconds || 0);
-      setIsRunning(true);
-      setIsPaused(false);
-      setIsPausedState(false);
+    const session = focusData?.active_session;
+    if (session) {
+      const paused = session.status === 'PAUSED';
+      setSessionId(session.session_id);
+      setElapsedSeconds(session.elapsed_seconds || 0);
+      setIsRunning(!paused);
+      setIsPaused(paused);
+      setIsPausedState(paused);
     } else if (focusData?.status === 'PAUSED') {
+      // Task was paused but its session was closed (e.g. abandoned):
+      // resuming starts a fresh session.
+      setSessionId(null);
+      setElapsedSeconds(0);
       setIsPausedState(true);
       setIsPaused(true);
       setIsRunning(false);
@@ -162,7 +176,11 @@ export default function FocusMode() {
 
   // Pause/Resume Session Action
   const handlePauseToggle = async () => {
-    if (!sessionId) return;
+    if (!sessionId) {
+      // No open session to resume — start a new one.
+      if (isPaused || isPausedState) await handleStart();
+      return;
+    }
     setIsPausing(true);
     try {
       if (isPaused || isPausedState) {
@@ -200,7 +218,7 @@ export default function FocusMode() {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['schedule'] });
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to complete session');
+      toast.error(err instanceof Error ? err.message : 'Failed to complete session');
     } finally {
       setIsCompleting(false);
     }
@@ -338,12 +356,22 @@ export default function FocusMode() {
         {isPausedState ? (
           <div className="flex flex-col gap-2.5 w-full max-w-[320px] font-sans">
             <button
-              onClick={handleStart}
-              className="w-full py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl text-base transition-colors shadow-glow-vermilion flex items-center justify-center gap-2"
+              onClick={handlePauseToggle}
+              disabled={isPausing || isCompleting}
+              className="w-full py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl text-base transition-colors shadow-glow-vermilion flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Play className="w-4 h-4 fill-current" />
-              Resume Focus
+              {isPausing ? 'Resuming...' : 'Resume Focus'}
             </button>
+            {sessionId && (
+              <button
+                onClick={handleComplete}
+                disabled={isPausing || isCompleting}
+                className="w-full py-3 border border-border hover:bg-muted text-foreground font-medium rounded-xl text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isCompleting ? 'Completing...' : 'Mark Task Complete'}
+              </button>
+            )}
             <button
               onClick={() => navigate('/dashboard')}
               className="w-full py-2.5 bg-transparent text-muted-foreground hover:text-foreground font-medium rounded-xl text-xs transition-colors"
