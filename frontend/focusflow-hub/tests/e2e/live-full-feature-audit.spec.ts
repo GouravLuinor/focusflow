@@ -127,7 +127,7 @@ test.describe('FocusFlow Live Full System Verification', () => {
 
     // ─── 8. Goal Detail & Dependency Graph ──────────────────────────
     if (createdGoal?.id) {
-      await page.goto(`${BASE_URL}/goals/${createdGoal.id}`);
+      await page.goto(`${BASE_URL}/goal/${createdGoal.id}`);
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
       await page.screenshot({ path: 'screenshots/audit_06_goal_detail.png', fullPage: true });

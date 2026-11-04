@@ -295,7 +295,7 @@ test.describe('FocusFlow Exhaustive Diagnostic', () => {
       await page.waitForTimeout(1000);
 
       await page.locator('text=DBMS Exam Prep').first().click();
-      await page.waitForURL('**/goals/*', { timeout: 5000 });
+      await page.waitForURL('**/goal/*', { timeout: 5000 });
       logStep(52, 'Goal Detail View Loaded', 'PASSED');
 
       const progressVal = await page.locator('text=Progress').first().locator('xpath=..').innerText();

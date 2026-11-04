@@ -532,7 +532,7 @@ test.describe('FocusFlow Full E2E Test Suite', () => {
         const goalId = responseData.id;
 
         // Navigate to Goal Detail page
-        await page.goto(`${BASE_URL}/goals/${goalId}`);
+        await page.goto(`${BASE_URL}/goal/${goalId}`);
         await page.waitForLoadState('networkidle');
         await page.locator('text=Loading goal details...').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
 
@@ -724,7 +724,7 @@ test.describe('FocusFlow Full E2E Test Suite', () => {
         const response = await responsePromise;
         const responseData = await response.json();
         const goalId = responseData.id;
-        const goalUrl = `${BASE_URL}/goals/${goalId}`;
+        const goalUrl = `${BASE_URL}/goal/${goalId}`;
 
         await page.locator('[role="dialog"]').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
         await page.waitForTimeout(2000);
@@ -932,7 +932,7 @@ test.describe('FocusFlow Full E2E Test Suite', () => {
     test('32. Invalid goal ID shows error state', async ({ page }) => {
         await signUpWithMode(page, 'none');
 
-        await page.goto(BASE_URL + '/goals/99999');
+        await page.goto(BASE_URL + '/goal/99999');
         await page.waitForLoadState('networkidle');
         await page.waitForTimeout(2000);
 

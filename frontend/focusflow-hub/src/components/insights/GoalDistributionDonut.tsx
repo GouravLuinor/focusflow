@@ -78,7 +78,7 @@ export function GoalDistributionDonut({ data }: GoalDistributionDonutProps) {
               {data.slice(0, 4).map((goal) => (
                 <button
                   key={goal.id}
-                  onClick={() => navigate(`/goals/${goal.id}`)}
+                  onClick={() => navigate(`/goal/${goal.id}`)}
                   className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-secondary/70 transition-colors text-left group"
                 >
                   <div className="flex items-center gap-2 min-w-0">

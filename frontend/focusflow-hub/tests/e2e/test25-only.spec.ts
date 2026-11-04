@@ -43,7 +43,7 @@ test.describe('TEST 25 ISOLATED', () => {
         const response = await responsePromise;
         const responseData = await response.json();
         const goalId = responseData.id;
-        const goalUrl = `${BASE_URL}/goals/${goalId}`;
+        const goalUrl = `${BASE_URL}/goal/${goalId}`;
         console.log('Created goal ID:', goalId, '→', goalUrl);
 
         await page.locator('[role="dialog"]').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});

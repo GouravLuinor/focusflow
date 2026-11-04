@@ -246,7 +246,7 @@ test.describe('FocusFlow Deep End-to-End Browser Audit', () => {
 
     // ─── 6. Goal Detail Page & Workflow Order ────────────────────────
     if (createdGoalId) {
-      await page.goto(`${BASE_URL}/goals/${createdGoalId}`);
+      await page.goto(`${BASE_URL}/goal/${createdGoalId}`);
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(1000);
 

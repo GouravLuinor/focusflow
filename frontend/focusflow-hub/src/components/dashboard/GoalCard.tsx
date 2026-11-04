@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { GraduationCap, Globe, Briefcase, Trophy } from 'lucide-react';
 import { differenceInDays, parseISO } from 'date-fns';
 
@@ -10,6 +11,7 @@ export interface Goal {
   progress?: number;
   completed_tasks?: number;
   total_tasks?: number;
+  tasks?: { is_completed: boolean }[];
 }
 
 interface GoalCardProps {
@@ -33,6 +35,10 @@ function getGoalIcon(title: string) {
 
 function computeProgress(goal: Goal): number {
   if (goal.progress !== undefined) return Math.min(100, Math.max(0, goal.progress));
+  if (goal.tasks && goal.tasks.length > 0) {
+    const done = goal.tasks.filter((t) => t.is_completed).length;
+    return Math.round((done / goal.tasks.length) * 100);
+  }
   if (goal.total_tasks && goal.total_tasks > 0) {
     return Math.round(((goal.completed_tasks ?? 0) / goal.total_tasks) * 100);
   }
@@ -61,7 +67,11 @@ export function GoalCard({ goal, index }: GoalCardProps) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: 0.05 * index, ease: 'easeOut' }}
-      className="bg-white dark:bg-dark-surface rounded-xl border border-[#E8E6E1] dark:border-dark-border p-5 hover:scale-[1.01] transition-transform duration-200"
+    >
+    <Link
+      to={`/goal/${goal.id}`}
+      aria-label={`Open goal: ${goal.title}`}
+      className="block bg-white dark:bg-dark-surface rounded-xl border border-[#E8E6E1] dark:border-dark-border p-5 hover:scale-[1.01] hover:border-primary/40 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
       <div className="flex justify-between items-start mb-4">
         <div>
@@ -89,6 +99,7 @@ export function GoalCard({ goal, index }: GoalCardProps) {
           />
         </div>
       </div>
+    </Link>
     </motion.div>
   );
 }
