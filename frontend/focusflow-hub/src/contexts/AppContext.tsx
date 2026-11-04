@@ -107,6 +107,30 @@ export const getAccessibilityDefaults = (mode: SupportMode): AccessibilitySettin
   };
 };
 
+const ACCESSIBILITY_STORAGE_KEY = 'accessibility';
+
+/**
+ * Mode defaults overlaid with any settings the user saved earlier, so
+ * preferences such as font size survive a page reload.
+ */
+export const getStoredAccessibility = (mode: SupportMode): AccessibilitySettings => {
+  const defaults = getAccessibilityDefaults(mode);
+  try {
+    const raw = localStorage.getItem(ACCESSIBILITY_STORAGE_KEY);
+    if (!raw) return defaults;
+    const stored = JSON.parse(raw) as Partial<AccessibilitySettings>;
+    const merged = { ...defaults };
+    for (const key of Object.keys(defaults) as (keyof AccessibilitySettings)[]) {
+      if (key in stored && typeof stored[key] === typeof defaults[key]) {
+        (merged as Record<string, unknown>)[key] = stored[key];
+      }
+    }
+    return merged;
+  } catch {
+    return defaults;
+  }
+};
+
 
 interface AppContextType {
   user: User | null;
@@ -134,7 +158,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
 
-  const [accessibility, setAccessibility] = useState<AccessibilitySettings>(getAccessibilityDefaults(null));
+  const [accessibility, setAccessibility] = useState<AccessibilitySettings>(() => getStoredAccessibility(null));
 
 
   /* ---------------------------
@@ -185,6 +209,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       root.classList.remove('dark');
       localStorage.setItem('darkMode', 'false');
+    }
+
+    try {
+      localStorage.setItem(ACCESSIBILITY_STORAGE_KEY, JSON.stringify(accessibility));
+    } catch {
+      // Storage unavailable (private mode / quota) — settings stay in memory.
     }
 
   }, [accessibility]);

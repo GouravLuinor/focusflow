@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { AlertCircle } from "lucide-react";
 import AuthCard from "@/components/auth/AuthCard";
 import { useApp } from "@/contexts/AppContext";
@@ -7,6 +7,8 @@ import { apiRequest } from "@/lib/api";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = (location.state as { from?: string } | null)?.from || "/dashboard";
   const { setUser } = useApp();
 
   const [email, setEmail] = useState("");
@@ -36,9 +38,10 @@ export default function Login() {
       localStorage.setItem("token", data.access_token);
       const user = await apiRequest("/auth/me");
       setUser(user);
-      navigate("/dashboard");
+      navigate(redirectTo, { replace: true });
     } catch (err) {
-      setError("Invalid email or password");
+      localStorage.removeItem("token");
+      setError(err instanceof Error ? err.message : "Invalid email or password");
     } finally {
       setIsLoading(false);
     }
