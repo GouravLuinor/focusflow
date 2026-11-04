@@ -36,6 +36,14 @@ interface Task {
   steps?: Step[];
   goal_id?: number | null;
   parent_task_id?: number | null;
+  estimated_minutes?: number | null;
+  priority?: string | null;
+}
+
+interface Dependency {
+  id: number;
+  task_id: number;
+  depends_on_task_id: number;
 }
 
 interface Goal {
@@ -82,7 +90,7 @@ export default function GoalDetail() {
   const dependencyQueries = useQueries({
     queries: (tasks || []).map((task) => ({
       queryKey: ['task', task.id, 'dependencies'],
-      queryFn: () => apiRequest(`/tasks/${task.id}/dependencies`),
+      queryFn: (): Promise<Dependency[]> => apiRequest(`/tasks/${task.id}/dependencies`),
       enabled: !!tasks && tasks.length > 0,
     })),
   });
@@ -109,6 +117,8 @@ export default function GoalDetail() {
           });
           queryClient.invalidateQueries({ queryKey: ['tasks', 'goal', goalId] });
           queryClient.invalidateQueries({ queryKey: ['goal', goalId] });
+          // New tasks change which tasks are executable; without this, root tasks render as "Blocked".
+          queryClient.invalidateQueries({ queryKey: ['tasks', 'executable'] });
           setActiveJobId(null);
           setIsDecomposing(false);
           clearInterval(interval);
@@ -217,8 +227,8 @@ export default function GoalDetail() {
     const baseInfo = {
       id: task.id,
       title: task.title,
-      estimated_minutes: (task as any).estimated_minutes,
-      priority: (task as any).priority,
+      estimated_minutes: task.estimated_minutes,
+      priority: task.priority,
       subtasks: task.steps?.map((s) => s.content) || [],
     };
 
@@ -252,7 +262,7 @@ export default function GoalDetail() {
   const allDependencies = dependencyQueries.flatMap((q, idx) => {
     const task = tasks?.[idx];
     if (!task || !q.data) return [];
-    return (q.data as any[]).map((d) => ({
+    return q.data.map((d) => ({
       task_id: task.id,
       depends_on_task_id: d.depends_on_task_id,
     }));
