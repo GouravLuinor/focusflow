@@ -1,18 +1,23 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, Lock, Check, Plus, X } from 'lucide-react';
+import { CheckCircle2, Lock, Check, Plus, X, Edit3, Trash2, Play, Pause } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { apiRequest } from '@/lib/api';
 import { AddDependencyDialog } from './AddDependencyDialog';
+import { EditTaskDialog } from '@/components/dashboard/EditTaskDialog';
+import { DeleteTaskDialog } from '@/components/dashboard/DeleteTaskDialog';
 
 export interface TaskItem {
   id: number;
   title: string;
+  description?: string | null;
+  estimated_minutes?: number | null;
+  priority?: string | null;
+  goal_id?: number | null;
   status: 'completed' | 'active' | 'ready' | 'blocked' | 'paused' | 'cancelled';
   subtasks?: string[];
-  blockedBy?: string;
-  unlocks?: string;
+  blockedBy?: string[];
+  unlocks?: string[];
   waitingFor?: string[];
 }
 
@@ -23,14 +28,14 @@ interface WorkflowTaskCardProps {
 }
 
 export function WorkflowTaskCard({ task, allGoalTasks, goalId }: WorkflowTaskCardProps) {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const [localStatus, setLocalStatus] = useState<TaskItem['status']>(task.status);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showAddDep, setShowAddDep] = useState(false);
+  const [showEditTask, setShowEditTask] = useState(false);
+  const [showDeleteTask, setShowDeleteTask] = useState(false);
 
-  // Sync state with prop updates
   useEffect(() => {
     setLocalStatus(task.status);
   }, [task.status]);
@@ -46,7 +51,6 @@ export function WorkflowTaskCard({ task, allGoalTasks, goalId }: WorkflowTaskCar
     queryFn: () => apiRequest(`/tasks/${task.id}/dependents`),
   });
 
-  // Map dependencies to their titles using allGoalTasks
   const dependencies = depsData?.map((d) => {
     const matched = allGoalTasks.find((gt) => gt.id === d.depends_on_task_id);
     return {
@@ -55,7 +59,6 @@ export function WorkflowTaskCard({ task, allGoalTasks, goalId }: WorkflowTaskCar
     };
   }) || [];
 
-  // Map dependents to their titles using allGoalTasks
   const dependents = dependentsData?.map((d) => {
     const matched = allGoalTasks.find((gt) => gt.id === d.task_id);
     return {
@@ -77,7 +80,6 @@ export function WorkflowTaskCard({ task, allGoalTasks, goalId }: WorkflowTaskCar
         body: JSON.stringify(payload),
       });
 
-      // Update local view status
       if (newStatus === 'COMPLETED') {
         setLocalStatus('completed');
       } else if (newStatus === 'PAUSED') {
@@ -86,12 +88,10 @@ export function WorkflowTaskCard({ task, allGoalTasks, goalId }: WorkflowTaskCar
         setLocalStatus('active');
       }
 
-      // Invalidate queries to trigger global updates
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['tasks', 'executable'] });
       queryClient.invalidateQueries({ queryKey: ['tasks', 'goal', goalId.toString()] });
       queryClient.invalidateQueries({ queryKey: ['schedule'] });
-      queryClient.invalidateQueries({ queryKey: ['sessions'] });
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to update status');
     } finally {
@@ -104,7 +104,6 @@ export function WorkflowTaskCard({ task, allGoalTasks, goalId }: WorkflowTaskCar
       await apiRequest(`/tasks/${task.id}/dependencies/${depId}`, {
         method: 'DELETE',
       });
-      // Invalidate dependencies, execution schedule, and goal detail tasks queries
       queryClient.invalidateQueries({ queryKey: ['task', task.id, 'dependencies'] });
       queryClient.invalidateQueries({ queryKey: ['tasks', 'goal', goalId.toString()] });
       queryClient.invalidateQueries({ queryKey: ['tasks', 'executable'] });
@@ -116,53 +115,61 @@ export function WorkflowTaskCard({ task, allGoalTasks, goalId }: WorkflowTaskCar
 
   const existingDepIds = dependencies.map((d) => d.id);
 
-  // Status-specific layout colors
-  const statusColors = {
-    completed: 'bg-[#059669]',
-    active: 'bg-[#4F46E5]',
-    ready: 'bg-[#4F46E5]',
-    blocked: 'bg-[#D97706]',
-    paused: 'bg-[#9E988E]',
-    cancelled: 'bg-[#9E988E]',
+  // Status strip styling
+  const statusStripColors = {
+    completed: 'bg-success',
+    active: 'bg-primary shadow-glow-vermilion',
+    ready: 'bg-primary',
+    blocked: 'bg-accent',
+    paused: 'bg-muted-foreground',
+    cancelled: 'bg-muted-foreground',
   };
 
-  const stripColor = statusColors[localStatus] || 'bg-[#E8E6E1]';
+  const stripColor = statusStripColors[localStatus] || 'bg-border';
 
   return (
     <div
       className={cn(
-        "bg-white rounded-xl border border-[#E8E6E1] overflow-hidden transition-all duration-200 flex font-sans",
-        localStatus === 'completed' && "opacity-75",
+        "bg-card rounded-2xl border border-border overflow-hidden transition-all duration-200 flex font-sans shadow-soft group",
+        localStatus === 'completed' && "opacity-70",
         localStatus === 'blocked' && "opacity-60",
-        localStatus === 'active' && "scale-[1.01] shadow-[0_0_0_2px_rgba(79,70,229,0.15)]"
+        localStatus === 'active' && "scale-[1.01] border-primary/40"
       )}
     >
-      <div className={cn("w-1 shrink-0", stripColor)} />
+      {/* 3px Status Strip */}
+      <div className={cn("w-1.5 shrink-0 transition-colors", stripColor)} />
 
       <div className="p-5 flex-1 flex flex-col gap-3">
         <div className="flex justify-between items-start">
           <div className="flex-1">
-            <h3
-              className={cn(
-                "text-[18px] font-medium leading-tight mb-1",
-                localStatus === 'completed' ? "text-[#6B6660] line-through" : "text-[#1A1A1A]"
+            <div className="flex items-center gap-2">
+              <h3
+                className={cn(
+                  "text-base font-semibold leading-tight font-sans text-foreground",
+                  localStatus === 'completed' && "text-muted-foreground line-through"
+                )}
+              >
+                {task.title}
+              </h3>
+              {task.estimated_minutes && (
+                <span className="text-[11px] text-muted-foreground font-medium bg-secondary px-2 py-0.5 rounded-md">
+                  {task.estimated_minutes}m
+                </span>
               )}
-            >
-              {task.title}
-            </h3>
+            </div>
 
-            {/* Dependency management items list */}
-            <div className="flex flex-wrap gap-2 items-center mt-2">
+            {/* Dependency management tags */}
+            <div className="flex flex-wrap gap-1.5 items-center mt-2.5">
               {dependencies.map((dep) => (
                 <span
                   key={dep.id}
-                  className="bg-[#D97706]/10 text-[#D97706] text-[12px] font-medium px-2 py-0.5 rounded flex items-center gap-1"
+                  className="bg-accent/10 text-accent text-xs font-medium px-2 py-0.5 rounded-lg flex items-center gap-1 border border-accent/20"
                 >
                   Blocked by: {dep.title}
                   <button
                     type="button"
                     onClick={() => handleRemoveDependency(dep.id)}
-                    className="hover:text-[#b45309] shrink-0"
+                    className="hover:text-destructive shrink-0 ml-0.5"
                     title="Remove dependency"
                   >
                     <X className="w-3 h-3" />
@@ -173,7 +180,7 @@ export function WorkflowTaskCard({ task, allGoalTasks, goalId }: WorkflowTaskCar
               {dependents.map((dep) => (
                 <span
                   key={dep.id}
-                  className="bg-[#e2dfff] text-[#3323cc] text-[12px] font-medium px-2 py-0.5 rounded"
+                  className="bg-secondary text-foreground text-xs font-medium px-2 py-0.5 rounded-lg border border-border"
                 >
                   Unlocks: {dep.title}
                 </span>
@@ -183,7 +190,7 @@ export function WorkflowTaskCard({ task, allGoalTasks, goalId }: WorkflowTaskCar
                 <button
                   type="button"
                   onClick={() => setShowAddDep(true)}
-                  className="text-[12px] font-medium text-[#4F46E5] hover:underline inline-flex items-center gap-0.5"
+                  className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-0.5 ml-1"
                 >
                   <Plus className="w-3 h-3" />
                   Add dependency
@@ -192,37 +199,53 @@ export function WorkflowTaskCard({ task, allGoalTasks, goalId }: WorkflowTaskCar
             </div>
           </div>
 
-          {/* Icon Badge Indicator */}
-          <div className="shrink-0 ml-4">
+          {/* Right Action Icons & Status */}
+          <div className="flex items-center gap-1.5 shrink-0 ml-3">
+            <button
+              onClick={() => setShowEditTask(true)}
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              title="Edit Task"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setShowDeleteTask(true)}
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+              title="Delete Task"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+
             {localStatus === 'completed' && (
-              <CheckCircle2 className="w-5 h-5 text-[#059669] fill-[#059669] text-white" />
+              <CheckCircle2 className="w-5 h-5 text-success ml-1" />
             )}
             {localStatus === 'blocked' && (
-              <Lock className="w-5 h-5 text-[#D97706]" />
+              <Lock className="w-4 h-4 text-accent ml-1" />
             )}
           </div>
         </div>
 
-        {/* Subtasks view */}
+        {/* Subtasks */}
         {task.subtasks && task.subtasks.length > 0 && (
-          <div className="flex gap-4 text-[12px] font-medium text-[#9E988E] mt-1">
+          <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-1">
             {task.subtasks.map((sub, i) => (
               <span key={i} className="flex items-center gap-1">
-                <Check className="w-4 h-4 text-[#9E988E]" />
+                <Check className="w-3.5 h-3.5 text-success" />
                 {sub}
               </span>
             ))}
           </div>
         )}
 
-        {/* Transition actions actions button bar */}
-        <div className="flex gap-2 justify-end mt-2">
+        {/* Action button bar */}
+        <div className="flex gap-2 justify-end mt-1 pt-2 border-t border-border/40">
           {localStatus === 'ready' && (
             <button
               onClick={() => handleStatusTransition('IN_PROGRESS')}
               disabled={isTransitioning}
-              className="bg-[#4F46E5] hover:bg-[#4338ca] text-white px-4 py-1.5 rounded-lg text-[12px] font-medium transition-colors"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all shadow-glow-vermilion flex items-center gap-1"
             >
+              <Play className="w-3 h-3 fill-current" />
               {isTransitioning ? 'Starting...' : 'Start'}
             </button>
           )}
@@ -232,15 +255,17 @@ export function WorkflowTaskCard({ task, allGoalTasks, goalId }: WorkflowTaskCar
               <button
                 onClick={() => handleStatusTransition('PAUSED')}
                 disabled={isTransitioning}
-                className="border border-[#c7c4d8] text-[#4F46E5] hover:bg-[#f5f2ff] px-4 py-1.5 rounded-lg text-[12px] font-medium transition-colors"
+                className="border border-border text-foreground hover:bg-secondary px-3 py-1.5 rounded-xl text-xs font-medium transition-colors flex items-center gap-1"
               >
+                <Pause className="w-3 h-3" />
                 {isTransitioning ? 'Pausing...' : 'Pause'}
               </button>
               <button
                 onClick={() => handleStatusTransition('COMPLETED')}
                 disabled={isTransitioning}
-                className="bg-[#059669] hover:bg-[#047857] text-white px-4 py-1.5 rounded-lg text-[12px] font-medium transition-colors"
+                className="bg-success hover:bg-success/90 text-success-foreground px-3.5 py-1.5 rounded-xl text-xs font-medium transition-colors flex items-center gap-1"
               >
+                <Check className="w-3 h-3" />
                 {isTransitioning ? 'Completing...' : 'Complete'}
               </button>
             </>
@@ -250,8 +275,9 @@ export function WorkflowTaskCard({ task, allGoalTasks, goalId }: WorkflowTaskCar
             <button
               onClick={() => handleStatusTransition('IN_PROGRESS')}
               disabled={isTransitioning}
-              className="bg-[#4F46E5] hover:bg-[#4338ca] text-white px-4 py-1.5 rounded-lg text-[12px] font-medium transition-colors"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all shadow-glow-vermilion flex items-center gap-1"
             >
+              <Play className="w-3 h-3 fill-current" />
               {isTransitioning ? 'Resuming...' : 'Resume'}
             </button>
           )}
@@ -265,6 +291,24 @@ export function WorkflowTaskCard({ task, allGoalTasks, goalId }: WorkflowTaskCar
         goalId={goalId}
         allGoalTasks={allGoalTasks}
         existingDependencies={existingDepIds}
+      />
+
+      <EditTaskDialog
+        open={showEditTask}
+        onClose={() => setShowEditTask(false)}
+        task={task}
+        onDeleteRequest={() => {
+          setShowEditTask(false);
+          setShowDeleteTask(true);
+        }}
+      />
+
+      <DeleteTaskDialog
+        open={showDeleteTask}
+        onClose={() => setShowDeleteTask(false)}
+        taskId={task.id}
+        taskTitle={task.title}
+        goalId={goalId}
       />
     </div>
   );

@@ -11,6 +11,7 @@ export interface User {
 export interface Step {
   id?: number;
   content: string;
+  title?: string;
   completed: boolean;
   order: number;
   task_id?: number;
@@ -24,6 +25,10 @@ export interface Task {
   completed: boolean;
   order?: number;
   steps?: Step[];
+  estimated_minutes?: number | null;
+  priority?: string | null;
+  goal_id?: number | null;
+  status?: string;
 }
 
 export interface AccessibilitySettings {

@@ -15,7 +15,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Lexend', 'system-ui', 'sans-serif'],
+        sans: ['Lexend', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
         lexend: ['Lexend', 'system-ui', 'sans-serif'],
         dyslexic: ['OpenDyslexic', 'sans-serif'],
       },
@@ -57,6 +57,11 @@ export default {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
         },
+        state: {
+          ready: "hsl(var(--state-ready))",
+          completed: "hsl(var(--state-completed))",
+          blocked: "hsl(var(--state-blocked))",
+        },
         adhd: {
           primary: "hsl(var(--adhd-primary))",
           secondary: "hsl(var(--adhd-secondary))",
@@ -82,15 +87,6 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        dark: {
-          background: '#0F0F1A',      // Deep navy-black
-          surface: '#1A1A2E',          // Card backgrounds
-          'surface-elevated': '#242440', // Elevated cards
-          border: '#2A2A45',           // Subtle borders
-          'text-primary': '#F0EDF5',   // Primary text
-          'text-secondary': '#9E98AE', // Secondary text
-          'text-muted': '#6B6680',     // Muted text
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -101,10 +97,10 @@ export default {
         "3xl": "calc(var(--radius) + 16px)",
       },
       boxShadow: {
-        soft: "0 4px 20px -2px rgba(0, 0, 0, 0.08)",
-        medium: "0 8px 30px -4px rgba(0, 0, 0, 0.12)",
-        glow: "0 0 30px -5px hsl(var(--primary) / 0.3)",
-        "glow-adhd": "0 0 30px -5px hsl(var(--adhd-primary) / 0.4)",
+        soft: "0 2px 10px -2px rgba(0, 0, 0, 0.04)",
+        medium: "0 8px 24px -4px rgba(0, 0, 0, 0.08)",
+        glow: "0 0 24px -4px hsl(var(--primary) / 0.25)",
+        "glow-vermilion": "0 4px 20px -2px rgba(211, 78, 36, 0.25)",
       },
       keyframes: {
         "accordion-down": {
@@ -116,11 +112,11 @@ export default {
           to: { height: "0" },
         },
         "fade-in": {
-          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "0%": { opacity: "0", transform: "translateY(6px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
         "fade-up": {
-          "0%": { opacity: "0", transform: "translateY(20px)" },
+          "0%": { opacity: "0", transform: "translateY(14px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
         "slide-in-right": {
@@ -128,41 +124,19 @@ export default {
           "100%": { transform: "translateX(0)", opacity: "1" },
         },
         "scale-in": {
-          "0%": { transform: "scale(0.95)", opacity: "0" },
+          "0%": { transform: "scale(0.97)", opacity: "0" },
           "100%": { transform: "scale(1)", opacity: "1" },
-        },
-        "pulse-soft": {
-          "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.8" },
-        },
-        "progress-fill": {
-          "0%": { width: "0%" },
-          "100%": { width: "var(--progress-width)" },
-        },
-        shimmer: {
-          "0%": { backgroundPosition: "-200% 0" },
-          "100%": { backgroundPosition: "200% 0" },
-        },
-        float: {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-10px)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in": "fade-in 0.5s ease-out",
-        "fade-up": "fade-up 0.6s ease-out",
-        "slide-in-right": "slide-in-right 0.3s ease-out",
-        "scale-in": "scale-in 0.3s ease-out",
-        "pulse-soft": "pulse-soft 2s ease-in-out infinite",
-        "progress-fill": "progress-fill 1s ease-out forwards",
-        shimmer: "shimmer 2s linear infinite",
-        float: "float 3s ease-in-out infinite",
+        "fade-in": "fade-in 0.35s ease-out",
+        "fade-up": "fade-up 0.45s ease-out",
+        "slide-in-right": "slide-in-right 0.25s ease-out",
+        "scale-in": "scale-in 0.25s ease-out",
       },
     },
   },
   plugins: [tailwindcssAnimate],
-
 } satisfies Config;
- 

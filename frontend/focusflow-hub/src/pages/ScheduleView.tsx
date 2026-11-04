@@ -12,6 +12,7 @@ import { WhyThisPlan } from '@/components/schedule/WhyThisPlan';
 import { WeekOverview } from '@/components/schedule/WeekOverview';
 import { QuickActions } from '@/components/schedule/QuickActions';
 import { ScheduleEmptyState } from '@/components/schedule/ScheduleEmptyState';
+import { CreateScheduleBlockDialog } from '@/components/schedule/CreateScheduleBlockDialog';
 import { apiRequest } from '@/lib/api';
 import { useApp } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
@@ -65,6 +66,8 @@ export default function ScheduleView() {
     queryFn: () => apiRequest('/goals'),
   });
 
+  const [showCreateBlock, setShowCreateBlock] = useState(false);
+
   // Action handlers
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -74,6 +77,7 @@ export default function ScheduleView() {
         body: JSON.stringify({
           available_minutes: 90,
           save_plan: true,
+          start_time: new Date().toISOString(),
         }),
       });
       // Invalidate queries to refresh the schedule timeline
@@ -86,7 +90,7 @@ export default function ScheduleView() {
   };
 
   const handleAddManual = () => {
-    alert("Manual scheduling block creation coming soon!");
+    setShowCreateBlock(true);
   };
 
   // Loading spinner fallback
@@ -378,6 +382,11 @@ export default function ScheduleView() {
           )}
         </div>
       )}
+
+      <CreateScheduleBlockDialog
+        open={showCreateBlock}
+        onClose={() => setShowCreateBlock(false)}
+      />
     </DashboardLayout>
   );
 }

@@ -6,125 +6,141 @@
 @import "@fontsource/opendyslexic/400-italic.css";
 @import "@fontsource/opendyslexic/700-italic.css";
 
-
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Calming base palette - soft blues and greens */
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    /* ─── JAPANESE PAPER & SUMI INK PALETTE (LIGHT MODE) ─── */
+    /* Warm Washi Paper Canvas (#F4F0EA) */
+    --background: 38 27% 94%;
+    /* Deep Sumi Ink Text (#18181B) */
+    --foreground: 240 6% 10%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    /* Crisp Warm Linen Surface (#FAF8F5) */
+    --card: 36 33% 97%;
+    --card-foreground: 240 6% 10%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover: 36 33% 97%;
+    --popover-foreground: 240 6% 10%;
 
-    /* Calming teal primary */
-    --primary: 175 60% 40%;
+    /* Japanese Lacquer Vermilion (#D34E24) */
+    --primary: 14 71% 48%;
     --primary-foreground: 0 0% 100%;
 
-    /* Soft sage secondary */
-    --secondary: 150 20% 92%;
-    --secondary-foreground: 175 60% 25%;
+    /* Soft Sand / Secondary (#EFEAE1) */
+    --secondary: 38 28% 91%;
+    --secondary-foreground: 240 6% 10%;
 
-    --muted: 210 30% 96%;
-    --muted-foreground: 220 15% 45%;
+    /* Muted Text & Backgrounds (#71717A & #EAE5DC) */
+    --muted: 38 20% 90%;
+    --muted-foreground: 240 4% 46%;
 
-    /* Warm accent for highlights */
-    --accent: 35 90% 60%;
-    --accent-foreground: 35 90% 20%;
+    /* Amber / Persimmon Accent (#C27803) */
+    --accent: 37 97% 39%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 74% 42%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* 1px Fine Ink Line (#E2DDD5) */
+    --border: 37 18% 86%;
+    --input: 37 18% 86%;
+    --ring: 14 71% 48%;
+
+    --radius: 1rem;
+
+    /* Semantic State Colors */
+    --state-ready: 14 71% 48%;
+    --state-completed: 127 18% 36%; /* Wasabi / Matcha Green */
+    --state-blocked: 37 97% 39%;   /* Persimmon Amber */
+
+    /* Mode-specific Accent Tints */
+    --adhd-primary: 14 71% 48%;    /* Lacquer Vermilion */
+    --adhd-secondary: 25 80% 55%;  /* Warm Persimmon */
+    --adhd-glow: 14 71% 48%;
+    
+    --autism-primary: 211 60% 43%; /* Structured Sky Slate */
+    --autism-secondary: 211 30% 90%;
+    --autism-muted: 211 20% 94%;
+    
+    --dyslexia-primary: 37 97% 39%; /* High-Contrast Amber */
+    --dyslexia-secondary: 37 60% 90%;
+    --dyslexia-text: 240 6% 10%;
+
+    /* Success / Completed */
+    --success: 127 18% 36%;
+    --success-foreground: 0 0% 100%;
+
+    /* Sidebar */
+    --sidebar-background: 38 27% 94%;
+    --sidebar-foreground: 240 6% 10%;
+    --sidebar-primary: 14 71% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 38 28% 91%;
+    --sidebar-accent-foreground: 240 6% 10%;
+    --sidebar-border: 37 18% 86%;
+    --sidebar-ring: 14 71% 48%;
+
+    /* Typography */
+    --font-sans: 'Lexend', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    --line-height-relaxed: 1.7;
+    --letter-spacing-wide: 0.01em;
+  }
+
+  .dark {
+    /* ─── SMOKED BASALT PALETTE (DARK MODE) ─── */
+    /* Warm Smoked Ink (#121214) */
+    --background: 240 6% 7%;
+    /* Rice Bone White (#EDEDEE) */
+    --foreground: 240 3% 93%;
+
+    /* Deep Charcoal Slate (#1A1A1E) */
+    --card: 240 8% 11%;
+    --card-foreground: 240 3% 93%;
+
+    --popover: 240 8% 11%;
+    --popover-foreground: 240 3% 93%;
+
+    /* Ember Vermilion (#E05D34) */
+    --primary: 14 74% 54%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Dark Basalt Secondary (#222228) */
+    --secondary: 240 8% 15%;
+    --secondary-foreground: 240 3% 93%;
+
+    /* Muted Ash (#202024 & #A1A1AA) */
+    --muted: 240 6% 14%;
+    --muted-foreground: 240 5% 65%;
+
+    /* Amber Highlight (#D97706) */
+    --accent: 38 92% 44%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 65% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 25% 90%;
-    --input: 210 25% 90%;
-    --ring: 175 60% 40%;
+    /* Basalt Border Line (#27272A) */
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 14 74% 54%;
 
-    --radius: 1rem;
+    /* Semantic State Colors */
+    --state-ready: 14 74% 54%;
+    --state-completed: 128 20% 45%;
+    --state-blocked: 38 92% 44%;
 
-    /* Mode-specific colors */
-    --adhd-primary: 15 85% 55%;
-    --adhd-secondary: 35 95% 65%;
-    --adhd-glow: 15 85% 55%;
-    
-    --autism-primary: 200 25% 50%;
-    --autism-secondary: 180 15% 85%;
-    --autism-muted: 200 10% 92%;
-    
-    --dyslexia-primary: 45 80% 50%;
-    --dyslexia-secondary: 45 60% 90%;
-    --dyslexia-text: 222 47% 11%;
-
-    /* Gradients */
-    --gradient-calm: linear-gradient(135deg, hsl(175 60% 40%), hsl(200 50% 50%));
-    --gradient-adhd: linear-gradient(135deg, hsl(15 85% 55%), hsl(35 95% 65%));
-    --gradient-autism: linear-gradient(135deg, hsl(200 25% 50%), hsl(180 15% 60%));
-    --gradient-dyslexia: linear-gradient(135deg, hsl(45 80% 50%), hsl(35 70% 60%));
-    --gradient-hero: linear-gradient(180deg, hsl(210 40% 98%) 0%, hsl(175 40% 95%) 100%);
-
-    /* Success colors */
-    --success: 150 60% 45%;
-    --success-foreground: 0 0% 100%;
-
-    /* Sidebar */
-    --sidebar-background: 175 30% 97%;
-    --sidebar-foreground: 222 47% 20%;
-    --sidebar-primary: 175 60% 40%;
+    /* Sidebar Dark */
+    --sidebar-background: 240 6% 7%;
+    --sidebar-foreground: 240 3% 93%;
+    --sidebar-primary: 14 74% 54%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 175 40% 92%;
-    --sidebar-accent-foreground: 175 60% 25%;
-    --sidebar-border: 175 20% 88%;
-    --sidebar-ring: 175 60% 40%;
-
-    /* Typography */
-    --font-sans: 'Lexend', system-ui, sans-serif;
-    --line-height-relaxed: 1.8;
-    --letter-spacing-wide: 0.02em;
-  }
-
-  .dark {
-    --background: 222 47% 8%;
-    --foreground: 210 40% 96%;
-
-    --card: 222 47% 12%;
-    --card-foreground: 210 40% 96%;
-
-    --popover: 222 47% 12%;
-    --popover-foreground: 210 40% 96%;
-
-    --primary: 175 60% 50%;
-    --primary-foreground: 222 47% 8%;
-
-    --secondary: 175 20% 18%;
-    --secondary-foreground: 175 40% 80%;
-
-    --muted: 220 30% 18%;
-    --muted-foreground: 220 15% 60%;
-
-    --accent: 35 80% 55%;
-    --accent-foreground: 35 95% 95%;
-
-    --destructive: 0 55% 45%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 220 25% 20%;
-    --input: 220 25% 20%;
-    --ring: 175 60% 50%;
-
-    --sidebar-background: 222 47% 10%;
-    --sidebar-foreground: 210 40% 90%;
-    --sidebar-primary: 175 60% 50%;
-    --sidebar-primary-foreground: 222 47% 8%;
-    --sidebar-accent: 175 30% 18%;
-    --sidebar-accent-foreground: 175 40% 80%;
-    --sidebar-border: 220 25% 18%;
-    --sidebar-ring: 175 60% 50%;
+    --sidebar-accent: 240 8% 15%;
+    --sidebar-accent-foreground: 240 3% 93%;
+    --sidebar-border: 240 4% 16%;
+    --sidebar-ring: 14 74% 54%;
   }
 
   /* High contrast mode */
@@ -139,28 +155,6 @@
     --muted-foreground: 0 0% 20%;
     --border: 0 0% 0%;
   }
-
-  /* ADHD Mode styling */
-  .mode-adhd {
-    --primary: 15 85% 55%;
-    --primary-foreground: 0 0% 100%;
-    --accent: 35 95% 65%;
-    --ring: 15 85% 55%;
-  }
-
-  /* Autism Mode styling */
-  .mode-autism {
-    --primary: 200 25% 50%;
-    --primary-foreground: 0 0% 100%;
-    --accent: 180 15% 85%;
-    --muted: 200 10% 92%;
-  }
-
-  /* Dyslexia Mode styling */
-  .mode-dyslexia {
-    --primary: 45 80% 50%;
-    --primary-foreground: 0 0% 0%;
-  }
 }
 
 @layer base {
@@ -170,14 +164,16 @@
 
   html {
     font-family: var(--font-sans);
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 
   body {
-    @apply text-foreground antialiased;
-    background-color: #FAF9F7;
+    @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
     line-height: var(--line-height-relaxed);
     letter-spacing: var(--letter-spacing-wide);
+    min-height: 100vh;
   }
 
   /* Dyslexia-friendly text */
@@ -193,90 +189,13 @@
   }
 }
 
-@layer components {
-  /* Gradient backgrounds */
-  .bg-gradient-calm {
-    background: var(--gradient-calm);
-  }
-
-  .bg-gradient-adhd {
-    background: var(--gradient-adhd);
-  }
-
-  .bg-gradient-autism {
-    background: var(--gradient-autism);
-  }
-
-  .bg-gradient-dyslexia {
-    background: var(--gradient-dyslexia);
-  }
-
-  .bg-gradient-hero {
-    background: var(--gradient-hero);
-  }
-
-  /* Card with hover effect */
-  .card-interactive {
-    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
-  }
-
-  /* Large action button */
-  .btn-action {
-    @apply text-xl font-semibold py-6 px-10 rounded-2xl shadow-lg transition-all duration-300;
-  }
-
-  .btn-action:hover {
-    @apply shadow-xl -translate-y-1;
-  }
-
-  /* Zen mode hidden elements */
-  .zen-hidden {
-    @apply opacity-0 pointer-events-none transition-opacity duration-500;
-  }
-
-  /* Pulse animation for ADHD timer */
-  .pulse-gentle {
-    animation: pulse-gentle 2s ease-in-out infinite;
-  }
-
-  @keyframes pulse-gentle {
-    0%, 100% {
-      transform: scale(1);
-      opacity: 1;
-    }
-    50% {
-      transform: scale(1.02);
-      opacity: 0.9;
-    }
-  }
-
-  /* Progress bar glow for ADHD */
-  .progress-glow {
-    box-shadow: 0 0 20px hsl(var(--adhd-primary) / 0.5);
-  }
-}
-
 @layer utilities {
   /* Font size utilities for accessibility */
-  .text-size-sm {
-    font-size: 0.875rem;
-  }
-
-  .text-size-base {
-    font-size: 1rem;
-  }
-
-  .text-size-lg {
-    font-size: 1.125rem;
-  }
-
-  .text-size-xl {
-    font-size: 1.25rem;
-  }
-
-  .text-size-2xl {
-    font-size: 1.5rem;
-  }
+  .text-size-sm { font-size: 0.875rem; }
+  .text-size-base { font-size: 1rem; }
+  .text-size-lg { font-size: 1.125rem; }
+  .text-size-xl { font-size: 1.25rem; }
+  .text-size-2xl { font-size: 1.5rem; }
 
   /* Spacing for dyslexia-friendly reading */
   .spacing-relaxed {
@@ -298,50 +217,4 @@
   .scroll-smooth {
     scroll-behavior: smooth;
   }
-}
-
-/* Dark Mode Global Overrides */
-.dark body {
-  background-color: #0F0F1A !important;
-}
-
-.dark .bg-surface,
-.dark [class*="bg-white"] {
-  background-color: #1A1A2E !important;
-}
-
-.dark .border-border,
-.dark [class*="border-[#E8E6E1]"] {
-  border-color: #2A2A45 !important;
-}
-
-.dark .text-text-primary,
-.dark [class*="text-[#1A1A1A]"] {
-  color: #F0EDF5 !important;
-}
-
-.dark .text-text-secondary,
-.dark [class*="text-[#6B6660]"] {
-  color: #9E98AE !important;
-}
-
-.dark .text-text-muted,
-.dark [class*="text-[#9E988E]"] {
-  color: #6B6680 !important;
-}
-
-.dark [class*="bg-[#FAF9F7]"] {
-  background-color: #0F0F1A !important;
-}
-
-.dark [class*="hover:bg-[#FAF9F7]"]:hover {
-  background-color: #242440 !important;
-}
-
-.dark select,
-.dark input,
-.dark textarea {
-  background-color: #0F0F1A !important;
-  color: #F0EDF5 !important;
-  border-color: #2A2A45 !important;
 }

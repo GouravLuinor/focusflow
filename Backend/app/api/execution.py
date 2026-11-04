@@ -36,6 +36,26 @@ def complete_session(
     return execution_service.complete_session(db, session_id, current_user.id)
 
 
+@router.post("/sessions/{session_id}/pause", response_model=ExecutionSessionResponse)
+def pause_session(
+    session_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Pause an active execution session."""
+    return execution_service.pause_session(db, session_id, current_user.id)
+
+
+@router.post("/sessions/{session_id}/resume", response_model=ExecutionSessionResponse)
+def resume_session(
+    session_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Resume a paused execution session."""
+    return execution_service.resume_session(db, session_id, current_user.id)
+
+
 @router.post("/sessions/{session_id}/abandon", response_model=ExecutionSessionResponse)
 def abandon_session(
     session_id: int,

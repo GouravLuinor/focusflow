@@ -6,6 +6,7 @@ from enum import Enum
 
 class SessionStatus(str, Enum):
     ACTIVE = "ACTIVE"
+    PAUSED = "PAUSED"
     COMPLETED = "COMPLETED"
     ABANDONED = "ABANDONED"
     INTERRUPTED = "INTERRUPTED"

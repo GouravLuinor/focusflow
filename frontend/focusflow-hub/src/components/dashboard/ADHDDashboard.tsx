@@ -7,12 +7,13 @@ import {
   Plus,
   Brain,
   Sparkles,
+  Play,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import type { Task } from "@/contexts/AppContext";
 import { useApp } from "@/contexts/AppContext";
 import { TaskCard } from "@/components/dashboard/TaskCard";
-import { CountdownTimer } from "@/components/dashboard/CountdownTimer";
 import { ProgressStats } from "@/components/dashboard/ProgressStats";
 import { AccessibilityPanel } from "@/components/dashboard/AccessibilityPanel";
 import { ZenButton } from "@/components/dashboard/ZenButton";
@@ -20,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, normalizeTasks } from "@/lib/api";
 
 export function ADHDDashboard() {
+  const navigate = useNavigate();
   const {
     tasks,
     setTasks,
@@ -90,63 +92,59 @@ export function ADHDDashboard() {
       await refreshTasks();
 
       toast({
-        title: "🔥 Momentum +1",
-        description: "Task saved successfully",
+        title: "Momentum +1",
+        description: "Task completed successfully",
       });
     } catch (err) {
       console.error("Failed to complete task", err);
     }
   };
 
-  /* =========================
-     QUICK ADD
-  ========================== */
   const handleQuickAdd = async () => {
     if (!quickTask.trim()) return;
-
     try {
       await apiRequest("/tasks/", {
         method: "POST",
         body: JSON.stringify({
-          title: quickTask,
-          description: "Quick added task",
+          title: quickTask.trim(),
+          estimated_minutes: 25,
+          priority: "HIGH",
         }),
       });
-
       setQuickTask("");
       await refreshTasks();
-
       toast({
-        title: "⚡ Task added",
-        description: "Saved to your focus session",
+        title: "Task Captured",
+        description: "Added to your focus stream",
       });
     } catch (err) {
-      console.error("Failed to create task", err);
+      console.error("Failed to quick add", err);
     }
   };
 
-  /* =========================
-     AI BREAKDOWN
-  ========================== */
   const handleAISubmit = async () => {
     if (!aiQuery.trim()) return;
-
     try {
-      await apiRequest(
-        `/ai/generate-steps?title=${encodeURIComponent(aiQuery)}`,
-        { method: "POST" }
-      );
-
-      setAiQuery("");
-      setShowAI(false);
-      await refreshTasks();
-
-      toast({
-        title: "🧠 AI Task Created",
-        description: "Broken into steps automatically",
+      const res = await apiRequest("/ai/parse-task", {
+        method: "POST",
+        body: JSON.stringify({ text: aiQuery.trim() }),
       });
+      if (res.title) {
+        await apiRequest("/tasks/", {
+          method: "POST",
+          body: JSON.stringify({
+            title: res.title,
+            description: res.description || null,
+            estimated_minutes: res.estimated_minutes || 25,
+            priority: res.priority || "HIGH",
+          }),
+        });
+        setAiQuery("");
+        setShowAI(false);
+        await refreshTasks();
+      }
     } catch (err) {
-      console.error("AI failed", err);
+      console.error("AI parse failed", err);
     }
   };
 
@@ -164,9 +162,9 @@ export function ADHDDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-lg font-semibold text-orange-500">
-          Loading your focus session...
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse text-base font-medium text-primary">
+          Preparing your focus stream...
         </div>
       </div>
     );
@@ -174,99 +172,119 @@ export function ADHDDashboard() {
 
   return (
     <div
-      className={`min-h-screen mode-adhd bg-gradient-adhd transition-all duration-300 ${
-        accessibility.zenMode ? "bg-white" : ""
+      className={`min-h-screen bg-background text-foreground transition-all duration-300 ${
+        accessibility.zenMode ? "p-4" : ""
       }`}
     >
       {/* HEADER */}
       <motion.header
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`sticky top-0 bg-white/70 backdrop-blur-lg border-b border-border z-30 ${
+        className={`sticky top-0 bg-background/80 backdrop-blur-md border-b border-border z-30 ${
           accessibility.zenMode ? "opacity-0 pointer-events-none" : ""
         }`}
       >
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex gap-3 items-center">
-            <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center shadow-lg">
-              <Zap className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-sm">
+              <Zap className="w-5 h-5" />
             </div>
             <div>
-              <h1 className={`font-bold ${fontSizeClass}`}>
-                Hey {user?.name}! 🚀
+              <h1 className={`font-semibold text-foreground ${fontSizeClass}`}>
+                Good day, {user?.name || 'there'}
               </h1>
-              <p className="text-sm text-muted-foreground">
-                Fast capture. Small wins. Big momentum.
+              <p className="text-xs text-muted-foreground">
+                One task at a time. No distractions.
               </p>
             </div>
           </div>
 
           <button
             onClick={() => setShowSettings(true)}
-            className="p-3 rounded-xl bg-muted hover:bg-muted/80"
+            className="p-2.5 rounded-xl bg-card border border-border hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
           >
-            <Settings className="w-5 h-5" />
+            <Settings className="w-4 h-4" />
           </button>
         </div>
       </motion.header>
 
       {/* MAIN */}
-      <main className="max-w-6xl mx-auto px-4 py-8 space-y-8">
-
+      <main className="max-w-5xl mx-auto px-4 py-6 space-y-6">
         {/* QUICK ADD + AI (hidden in Zen) */}
         {!accessibility.zenMode && (
-          <>
-            <div className="bg-white rounded-2xl shadow-lg p-5 flex gap-3">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="bg-card border border-border rounded-2xl p-4 flex gap-2 shadow-soft">
               <input
                 value={quickTask}
                 onChange={(e) => setQuickTask(e.target.value)}
-                placeholder="Quick add a task before you forget..."
-                className="flex-1 px-4 py-3 rounded-xl border"
+                placeholder="Capture a thought before it slips..."
+                className="flex-1 bg-background px-3 py-2 rounded-xl border border-border text-sm outline-none focus:border-primary transition-colors"
+                onKeyDown={(e) => { if (e.key === 'Enter') handleQuickAdd(); }}
               />
               <button
                 onClick={handleQuickAdd}
-                className="px-5 rounded-xl bg-orange-500 text-white flex items-center gap-2"
+                className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-medium flex items-center gap-1.5 transition-colors"
               >
-                <Plus size={16} /> Add
+                <Plus size={15} /> Add
               </button>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg p-5">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Brain size={18} /> Need help breaking it down?
+            <div className="bg-card border border-border rounded-2xl p-4 shadow-soft">
+              <div className="flex justify-between items-center">
+                <h3 className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                  <Brain size={15} className="text-primary" /> AI Task Breakdown
                 </h3>
                 <button
                   onClick={() => setShowAI(!showAI)}
-                  className="text-sm text-orange-500"
+                  className="text-xs font-medium text-primary hover:underline"
                 >
-                  {showAI ? "Hide" : "Ask AI"}
+                  {showAI ? "Close" : "Open Assistant"}
                 </button>
               </div>
 
               {showAI && (
-                <div className="flex gap-3">
+                <div className="flex gap-2 mt-3 animate-fade-in">
                   <input
                     value={aiQuery}
                     onChange={(e) => setAiQuery(e.target.value)}
-                    placeholder="Example: Study machine learning"
-                    className="flex-1 px-4 py-3 rounded-xl border"
+                    placeholder="e.g. Study chapter 4 for exam"
+                    className="flex-1 bg-background px-3 py-2 rounded-xl border border-border text-sm outline-none focus:border-primary transition-colors"
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleAISubmit(); }}
                   />
                   <button
                     onClick={handleAISubmit}
-                    className="px-5 bg-orange-500 text-white rounded-xl flex items-center gap-2"
+                    className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl text-xs font-medium flex items-center gap-1.5 transition-colors"
                   >
-                    <Sparkles size={16} /> Go
+                    <Sparkles size={14} /> Parse
                   </button>
                 </div>
               )}
             </div>
-          </>
+          </div>
         )}
 
         <div className="grid lg:grid-cols-3 gap-6">
-          <div className="space-y-6">
-            <CountdownTimer />
+          <div className="space-y-4">
+            {/* Calm Focus Session Launcher */}
+            <div className="bg-card border border-border rounded-2xl p-5 shadow-soft flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Current Session
+                </span>
+                <span className="text-xs text-primary font-medium">ADHD Flow</span>
+              </div>
+              <p className="text-sm text-foreground">
+                Ready to dive in? Start a progressive focus session without time pressure.
+              </p>
+              <button
+                onClick={() => navigate('/focus')}
+                className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl flex items-center justify-center gap-2 text-xs shadow-glow-vermilion transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <Play className="w-4 h-4 fill-current" />
+                Launch Focus Mode
+              </button>
+            </div>
+
             <ProgressStats
               completed={completedCount}
               total={tasks.length}
@@ -275,12 +293,12 @@ export function ADHDDashboard() {
 
           <div className="lg:col-span-2">
             {tasks.length === 0 ? (
-              <div className="bg-white rounded-3xl p-12 text-center shadow-lg">
-                <h2 className="text-2xl font-bold mb-4 text-orange-600">
-                  No tasks yet 👀
+              <div className="bg-card border border-border rounded-2xl p-12 text-center shadow-soft">
+                <h2 className="text-lg font-semibold mb-2 text-foreground">
+                  Your slate is clean 🌿
                 </h2>
-                <p className="text-muted-foreground">
-                  Use Quick Add or Ask AI to create your first task.
+                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                  Use Quick Add above to capture your next priority task.
                 </p>
               </div>
             ) : (
@@ -295,16 +313,18 @@ export function ADHDDashboard() {
                   />
                 ) : (
                   <motion.div
-                    initial={{ scale: 0.9 }}
+                    initial={{ scale: 0.96 }}
                     animate={{ scale: 1 }}
-                    className="bg-orange-500 rounded-3xl p-10 text-center text-white"
+                    className="bg-card border border-primary/30 rounded-2xl p-8 text-center text-foreground shadow-soft"
                   >
-                    <Trophy className="w-16 h-16 mx-auto mb-6" />
-                    <h2 className="text-2xl font-bold">
-                      Focus streak complete 🔥
+                    <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
+                      <Trophy className="w-6 h-6" />
+                    </div>
+                    <h2 className="text-xl font-semibold mb-1">
+                      Focus stream clear
                     </h2>
-                    <p className="opacity-90 mt-3">
-                      You finished all {tasks.length} tasks.
+                    <p className="text-xs text-muted-foreground">
+                      You finished all {tasks.length} active tasks. Enjoy the moment.
                     </p>
                   </motion.div>
                 )}

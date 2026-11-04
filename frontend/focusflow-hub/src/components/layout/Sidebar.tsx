@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { CheckSquare, Crosshair, BarChart3, Settings, Plus } from 'lucide-react';
+import { CheckSquare, Crosshair, BarChart3, Settings, Plus, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useApp } from '@/contexts/AppContext';
+import { Logo } from '@/components/shared/Logo';
 import { CreateTaskDialog } from '../dashboard/CreateTaskDialog';
 
 const navItems = [
@@ -14,40 +15,43 @@ const navItems = [
 
 export function Sidebar() {
   const navigate = useNavigate();
-  const { supportMode } = useApp();
+  const { supportMode, logout } = useApp();
   const [showCreateTask, setShowCreateTask] = useState(false);
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
-    <aside className="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 z-40 bg-transparent border-r border-[#E8E6E1]/50 dark:bg-dark-background dark:border-dark-border py-8">
-      {/* Brand */}
-      <div className="px-8 mb-12">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-[#4F46E5] flex items-center justify-center text-white font-bold text-xl">
-            FF
-          </div>
+    <aside className="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 z-40 bg-sidebar border-r border-sidebar-border py-6 px-4">
+      {/* Brand Header */}
+      <div className="px-3 mb-8">
+        <div className="flex items-center gap-3">
+          <Logo size={36} />
           <div>
-            <h1 className="text-xl font-medium text-[#1A1A1A] dark:text-dark-text-primary tracking-tight leading-tight">
+            <h1 className="text-base font-semibold text-foreground tracking-tight leading-tight font-sans">
               FocusFlow
             </h1>
-            <p className="text-[12px] font-medium text-[#9E988E] dark:text-dark-text-muted mt-0.5">
-              One task at a time
+            <p className="text-[11px] font-medium text-muted-foreground">
+              One thing at a time
             </p>
           </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 space-y-2">
+      <nav className="flex-1 space-y-1">
         {navItems.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-4 px-4 py-3 rounded-lg text-[12px] font-medium transition-all duration-200',
+                'flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-150',
                 isActive
-                  ? 'text-[#4F46E5] border-l-4 border-[#4F46E5] bg-white dark:bg-dark-surface shadow-[0_0_0_2px_rgba(79,70,229,0.15)]'
-                  : 'text-[#6B6660] hover:bg-[#eae6f4] hover:text-[#1A1A1A] dark:text-dark-text-secondary dark:hover:text-dark-text-primary dark:hover:bg-dark-surface'
+                  ? 'text-primary bg-card border border-border shadow-soft font-semibold'
+                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
               )
             }
           >
@@ -55,34 +59,43 @@ export function Sidebar() {
               <>
                 <Icon
                   className={cn(
-                    'w-[20px] h-[20px] shrink-0',
-                    isActive ? 'text-[#4F46E5]' : 'text-[#6B6660] dark:text-dark-text-secondary'
+                    'w-4 h-4 shrink-0',
+                    isActive ? 'text-primary' : 'text-muted-foreground'
                   )}
                 />
-                <span className="font-medium text-[12px]">{label}</span>
+                <span>{label}</span>
               </>
             )}
           </NavLink>
         ))}
+
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors mt-4"
+        >
+          <LogOut className="w-4 h-4 shrink-0" />
+          <span>Logout</span>
+        </button>
       </nav>
 
-      {/* New Task & ADHD Focus CTA */}
-      <div className="px-8 mt-auto flex flex-col gap-2">
+      {/* Action Buttons */}
+      <div className="mt-auto flex flex-col gap-2 pt-4 border-t border-border/50">
         {supportMode === 'adhd' && (
           <button
             onClick={() => navigate('/focus')}
-            className="w-full bg-[#f97316] hover:bg-[#ea580c] text-white text-[12px] font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg hover:scale-[1.02]"
+            className="w-full bg-secondary hover:bg-secondary/80 text-foreground border border-border text-xs font-medium py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 transition-all"
           >
-            <Crosshair className="w-[18px] h-[18px]" />
-            Start Focus (25m)
+            <Crosshair className="w-4 h-4 text-primary" />
+            Start Focus Flow
           </button>
         )}
         <button
           onClick={() => setShowCreateTask(true)}
           data-testid="create-task-btn"
-          className="w-full bg-[#4F46E5] hover:bg-[#4338ca] text-white text-[12px] font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors duration-200"
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-medium py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-glow-vermilion"
         >
-          <Plus className="w-[18px] h-[18px]" />
+          <Plus className="w-4 h-4" />
           New Task
         </button>
       </div>

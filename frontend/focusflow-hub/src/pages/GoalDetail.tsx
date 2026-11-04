@@ -387,6 +387,7 @@ export default function GoalDetail() {
 
               {/* Goal Settings */}
               <GoalSettings
+                goal={goal || null}
                 status={statusLabel}
                 priority={priorityLabel}
                 deadline={deadlineLabel}

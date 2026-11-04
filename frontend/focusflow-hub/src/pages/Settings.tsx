@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Brain, Calendar, Type, Sliders, Check, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { Brain, Calendar, Type, Sliders, Check, Sparkles, Sun, Moon } from 'lucide-react';
 import { useApp, SupportMode, getAccessibilityDefaults } from '@/contexts/AppContext';
 import { apiRequest } from '@/lib/api';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -15,6 +16,7 @@ interface ProfileResponse {
 
 export default function Settings() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { supportMode, setSupportMode, accessibility, setAccessibility } = useApp();
 
@@ -31,7 +33,6 @@ export default function Settings() {
   
   const [isSaving, setIsSaving] = useState(false);
 
-  // Synchronize component state when global accessibility state changes (e.g. initial load)
   useEffect(() => {
     setActiveMode(supportMode);
     setFontSize(accessibility.fontSize);
@@ -43,7 +44,6 @@ export default function Settings() {
     setDarkMode(accessibility.darkMode);
   }, [supportMode, accessibility]);
 
-  // When support mode changes, show pre-filled default toggles for that mode
   const handleModeChange = (mode: SupportMode) => {
     setActiveMode(mode);
     const defaults = getAccessibilityDefaults(mode);
@@ -61,7 +61,6 @@ export default function Settings() {
     setIsSaving(true);
 
     try {
-      // 1. Persist support mode to backend database
       const profile: ProfileResponse = await apiRequest('/profile', {
         method: 'POST',
         body: JSON.stringify({
@@ -69,12 +68,10 @@ export default function Settings() {
         }),
       });
 
-      // 2. Sync global support mode
       const parsedMode = profile.support_mode === 'none' ? null : (profile.support_mode as SupportMode);
       setSupportMode(parsedMode);
 
-      // 3. Sync global accessibility options
-      const nextSettings = {
+      setAccessibility({
         fontSize,
         dyslexiaFont,
         lineSpacing,
@@ -84,25 +81,17 @@ export default function Settings() {
         darkMode,
         sessionDefaultMinutes: activeMode === 'adhd' ? 25 : 45,
         showExplicitDependencies: activeMode === 'autism',
-        reducedTextDensity: activeMode === 'dyslexia',
-      };
-      setAccessibility(nextSettings);
+        reducedTextDensity: activeMode === 'adhd' || activeMode === 'dyslexia',
+      });
 
-      // Invalidate queries so components re-trigger rendering with new profiles/layouts
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['schedule'] });
 
       toast({
-        title: 'Settings updated',
-        description: 'Your customization preferences have been saved successfully.',
+        title: 'Settings Saved',
+        description: 'Your neuro-inclusive preferences and appearance have been updated.',
       });
     } catch (err) {
-      toast({
-        title: 'Error saving settings',
-        description: err instanceof Error ? err.message : 'Something went wrong',
-        variant: 'destructive',
-      });
+      alert(err instanceof Error ? err.message : 'Failed to save settings');
     } finally {
       setIsSaving(false);
     }
@@ -114,56 +103,48 @@ export default function Settings() {
       title: 'Standard Mode',
       description: 'Clean default interface with focus timers and daily timelines',
       icon: Sliders,
-      colorClass: 'border-[#E8E6E1]',
-      activeColorClass: 'border-[#4F46E5] ring-2 ring-[#4F46E5]/10',
     },
     {
       id: 'adhd' as const,
       title: 'ADHD Support',
-      description: 'Single-task prioritization, shorter 25m timers, reduced visual clutter',
+      description: 'Single-task prioritization, 25m momentum blocks, zero visual clutter',
       icon: Brain,
-      colorClass: 'border-[#E8E6E1]',
-      activeColorClass: 'border-[#f97316] ring-2 ring-[#f97316]/10',
     },
     {
       id: 'autism' as const,
       title: 'Autism Support',
-      description: 'Structured checklists, explicit dependency labels, multi-day week overview calendar',
+      description: 'Structured micro-steps, explicit dependency locks, predictable timelines',
       icon: Calendar,
-      colorClass: 'border-[#E8E6E1]',
-      activeColorClass: 'border-[#0284c7] ring-2 ring-[#0284c7]/10',
     },
     {
       id: 'dyslexia' as const,
       title: 'Dyslexia Support',
-      description: 'OpenDyslexic typography, larger text options, relaxed layout spacing',
+      description: 'OpenDyslexic typography, relaxed line-height, high distinction styling',
       icon: Type,
-      colorClass: 'border-[#E8E6E1]',
-      activeColorClass: 'border-[#d97706] ring-2 ring-[#d97706]/10',
     },
   ];
 
   return (
     <DashboardLayout>
-      <div className="flex-1 p-6 md:p-8 max-w-[1200px] mx-auto w-full font-sans text-[#1A1A1A]">
+      <div className="flex-1 p-6 md:p-8 max-w-[1100px] mx-auto w-full font-sans text-foreground">
         {/* Title Header */}
         <div className="mb-8">
-          <h2 className="text-[28px] font-bold tracking-tight">Personalization Settings</h2>
-          <p className="text-[14px] text-[#6B6660] mt-1">
-            Configure FocusFlow to match your unique cognitive style and accessibility preferences.
+          <h1 className="text-2xl font-bold tracking-tight">Personalization & Ergonomics</h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            Configure FocusFlow to match your unique cognitive rhythms and sensory preferences.
           </p>
         </div>
 
         <form onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Support Mode selection (7 cols) */}
           <div className="lg:col-span-7 flex flex-col gap-6">
-            <div className="bg-white border border-[#E8E6E1] rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="w-5 h-5 text-[#4F46E5]" />
-                <h3 className="text-[18px] font-semibold">Cognitive Support Mode</h3>
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-soft flex flex-col gap-4">
+              <div className="flex items-center gap-2 mb-1">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <h2 className="text-base font-semibold">Cognitive Support Mode</h2>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 {supportModesList.map((mode) => {
                   const Icon = mode.icon;
                   const isActive = activeMode === mode.id;
@@ -174,37 +155,27 @@ export default function Settings() {
                       type="button"
                       onClick={() => handleModeChange(mode.id)}
                       className={cn(
-                        'flex flex-col text-left p-4 rounded-xl border transition-all duration-200 hover:scale-[1.01]',
-                        isActive ? mode.activeColorClass : mode.colorClass,
-                        'bg-white'
+                        'flex flex-col text-left p-4 rounded-xl border transition-all duration-150',
+                        isActive 
+                          ? 'border-primary ring-1 ring-primary bg-primary/5 text-foreground' 
+                          : 'border-border bg-background hover:border-primary/40 text-muted-foreground hover:text-foreground'
                       )}
                     >
-                      <div className="flex justify-between items-start w-full mb-3">
+                      <div className="flex justify-between items-start w-full mb-2.5">
                         <div className={cn(
-                          'w-9 h-9 rounded-lg flex items-center justify-center',
-                          isActive 
-                            ? mode.id === 'adhd' ? 'bg-[#f97316]/10 text-[#f97316]' 
-                              : mode.id === 'autism' ? 'bg-[#0284c7]/10 text-[#0284c7]'
-                              : mode.id === 'dyslexia' ? 'bg-[#d97706]/10 text-[#d97706]'
-                              : 'bg-[#4F46E5]/10 text-[#4F46E5]'
-                            : 'bg-[#FAF9F7] text-[#9E988E]'
+                          'w-8 h-8 rounded-lg flex items-center justify-center',
+                          isActive ? 'bg-primary/10 text-primary' : 'bg-secondary text-muted-foreground'
                         )}>
-                          <Icon className="w-5 h-5" />
+                          <Icon className="w-4 h-4" />
                         </div>
                         {isActive && (
-                          <div className={cn(
-                            'w-5 h-5 rounded-full flex items-center justify-center text-white text-[12px] font-bold',
-                            mode.id === 'adhd' ? 'bg-[#f97316]' 
-                              : mode.id === 'autism' ? 'bg-[#0284c7]'
-                              : mode.id === 'dyslexia' ? 'bg-[#d97706]'
-                              : 'bg-[#4F46E5]'
-                          )}>
-                            <Check className="w-3.5 h-3.5" />
+                          <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-[10px]">
+                            <Check className="w-3 h-3" />
                           </div>
                         )}
                       </div>
-                      <h4 className="text-[15px] font-bold mb-1">{mode.title}</h4>
-                      <p className="text-[12px] text-[#6B6660] leading-relaxed flex-1">
+                      <h3 className="text-sm font-semibold text-foreground mb-1">{mode.title}</h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
                         {mode.description}
                       </p>
                     </button>
@@ -214,147 +185,121 @@ export default function Settings() {
             </div>
 
             {/* Appearance Settings */}
-            <div className="bg-white border border-[#E8E6E1] rounded-2xl p-6 shadow-sm flex flex-col gap-4">
-              <div className="flex items-center gap-2 mb-2">
-                <h3 className="text-[18px] font-semibold">Appearance</h3>
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-soft flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-semibold">Appearance & Atmosphere</h2>
               </div>
-              <p className="text-[12px] text-[#6B6660] -mt-2">
-                Choose your preferred theme
+              <p className="text-xs text-muted-foreground -mt-2">
+                Washi Paper light canvas or Smoked Ink dark obsidian
               </p>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => setDarkMode(false)}
                   className={cn(
-                    'flex items-center justify-center gap-2 p-4 rounded-xl border transition-all duration-200 hover:scale-[1.01]',
+                    'flex items-center justify-center gap-2 p-3.5 rounded-xl border transition-all',
                     !darkMode 
-                      ? 'border-[#4F46E5] bg-[#4F46E5]/5 text-[#4F46E5] ring-2 ring-[#4F46E5]/10' 
-                      : 'border-[#E8E6E1] bg-white text-[#1A1A1A]'
+                      ? 'border-primary bg-primary/10 text-primary font-medium ring-1 ring-primary' 
+                      : 'border-border bg-background text-muted-foreground hover:text-foreground'
                   )}
                 >
-                  <span className="text-lg">☀️</span>
-                  <span className="text-[14px] font-semibold">Light</span>
+                  <Sun className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Washi Light</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setDarkMode(true)}
                   className={cn(
-                    'flex items-center justify-center gap-2 p-4 rounded-xl border transition-all duration-200 hover:scale-[1.01]',
+                    'flex items-center justify-center gap-2 p-3.5 rounded-xl border transition-all',
                     darkMode 
-                      ? 'border-[#4F46E5] bg-[#4F46E5]/5 text-[#4F46E5] ring-2 ring-[#4F46E5]/10' 
-                      : 'border-[#E8E6E1] bg-white text-[#1A1A1A]'
+                      ? 'border-primary bg-primary/10 text-primary font-medium ring-1 ring-primary' 
+                      : 'border-border bg-background text-muted-foreground hover:text-foreground'
                   )}
                 >
-                  <span className="text-lg">🌙</span>
-                  <span className="text-[14px] font-semibold">Dark</span>
+                  <Moon className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Smoked Ink Dark</span>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Accessibility Overrides (5 cols) */}
+          {/* Right Column: Typography & Layout Toggles (5 cols) */}
           <div className="lg:col-span-5 flex flex-col gap-6">
-            <div className="bg-white border border-[#E8E6E1] rounded-2xl p-6 shadow-sm flex flex-col gap-5">
-              <div className="flex items-center gap-2 pb-3 border-b border-[#E8E6E1]/50">
-                <Sliders className="w-5 h-5 text-[#4F46E5]" />
-                <h3 className="text-[18px] font-semibold">Fine-Tuning</h3>
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-soft flex flex-col gap-4">
+              <h2 className="text-base font-semibold">Visual Ergonomics</h2>
+
+              {/* Dyslexia Font Toggle */}
+              <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-xl border border-border/50">
+                <div>
+                  <span className="text-xs font-semibold text-foreground block">OpenDyslexic Font</span>
+                  <span className="text-[11px] text-muted-foreground">Weighted letterforms to prevent rotation</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={dyslexiaFont}
+                  onChange={(e) => setDyslexiaFont(e.target.checked)}
+                  className="w-4 h-4 rounded text-primary focus:ring-primary accent-primary cursor-pointer"
+                />
               </div>
 
-              {/* Typography options */}
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[12px] font-bold text-[#6B6660] uppercase tracking-wider">Font Size</label>
-                  <select
-                    value={fontSize}
-                    onChange={(e) => setFontSize(e.target.value as any)}
-                    className="w-full bg-[#FAF9F7] border border-[#E8E6E1] rounded-lg p-2.5 text-[13px] font-sans outline-none focus:border-[#4F46E5]"
-                  >
-                    <option value="sm">Small (14px)</option>
-                    <option value="base">Standard (16px)</option>
-                    <option value="lg">Large (18px)</option>
-                    <option value="xl">Extra Large (20px)</option>
-                    <option value="2xl">Double Large (24px)</option>
-                  </select>
+              {/* Zen Mode Toggle */}
+              <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-xl border border-border/50">
+                <div>
+                  <span className="text-xs font-semibold text-foreground block">Zen Mode</span>
+                  <span className="text-[11px] text-muted-foreground">Hide ancillary badges and secondary widgets</span>
                 </div>
+                <input
+                  type="checkbox"
+                  checked={zenMode}
+                  onChange={(e) => setZenMode(e.target.checked)}
+                  className="w-4 h-4 rounded text-primary focus:ring-primary accent-primary cursor-pointer"
+                />
+              </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[12px] font-bold text-[#6B6660] uppercase tracking-wider">Line Spacing</label>
-                  <select
-                    value={lineSpacing}
-                    onChange={(e) => setLineSpacing(e.target.value as any)}
-                    className="w-full bg-[#FAF9F7] border border-[#E8E6E1] rounded-lg p-2.5 text-[13px] font-sans outline-none focus:border-[#4F46E5]"
-                  >
-                    <option value="normal">Normal</option>
-                    <option value="relaxed">Relaxed</option>
-                    <option value="loose">Loose</option>
-                  </select>
+              {/* High Contrast Toggle */}
+              <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-xl border border-border/50">
+                <div>
+                  <span className="text-xs font-semibold text-foreground block">High Contrast</span>
+                  <span className="text-[11px] text-muted-foreground">Maximized edge separation for low vision</span>
                 </div>
+                <input
+                  type="checkbox"
+                  checked={highContrast}
+                  onChange={(e) => setHighContrast(e.target.checked)}
+                  className="w-4 h-4 rounded text-primary focus:ring-primary accent-primary cursor-pointer"
+                />
+              </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[12px] font-bold text-[#6B6660] uppercase tracking-wider">Letter Spacing</label>
-                  <select
-                    value={letterSpacing}
-                    onChange={(e) => setLetterSpacing(e.target.value as any)}
-                    className="w-full bg-[#FAF9F7] border border-[#E8E6E1] rounded-lg p-2.5 text-[13px] font-sans outline-none focus:border-[#4F46E5]"
-                  >
-                    <option value="normal">Normal</option>
-                    <option value="wide">Wide</option>
-                    <option value="wider">Wider</option>
-                  </select>
+              {/* Font Size Selector */}
+              <div>
+                <label className="text-xs font-semibold text-foreground block mb-2">Base Font Size</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['sm', 'base', 'lg'] as const).map((sz) => (
+                    <button
+                      key={sz}
+                      type="button"
+                      onClick={() => setFontSize(sz)}
+                      className={cn(
+                        'py-2 text-xs rounded-xl border capitalize font-medium transition-colors',
+                        fontSize === sz 
+                          ? 'border-primary bg-primary/10 text-primary' 
+                          : 'border-border bg-background text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      {sz === 'sm' ? 'Compact' : sz === 'base' ? 'Standard' : 'Large'}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Toggles section */}
-              <div className="flex flex-col gap-3 pt-3 border-t border-[#E8E6E1]/50">
-                <label className="flex items-center gap-3 cursor-pointer p-1 hover:bg-[#FAF9F7] rounded transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={dyslexiaFont}
-                    onChange={(e) => setDyslexiaFont(e.target.checked)}
-                    className="w-4 h-4 rounded text-[#4F46E5] focus:ring-[#4F46E5]"
-                  />
-                  <div>
-                    <div className="text-[13px] font-semibold">OpenDyslexic Font</div>
-                    <div className="text-[11px] text-[#6B6660]">Dyslexia-friendly reading typography</div>
-                  </div>
-                </label>
-
-                <label className="flex items-center gap-3 cursor-pointer p-1 hover:bg-[#FAF9F7] rounded transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={zenMode}
-                    onChange={(e) => setZenMode(e.target.checked)}
-                    className="w-4 h-4 rounded text-[#4F46E5] focus:ring-[#4F46E5]"
-                  />
-                  <div>
-                    <div className="text-[13px] font-semibold">Zen Mode</div>
-                    <div className="text-[11px] text-[#6B6660]">Minimize extraneous headers and popups</div>
-                  </div>
-                </label>
-
-                <label className="flex items-center gap-3 cursor-pointer p-1 hover:bg-[#FAF9F7] rounded transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={highContrast}
-                    onChange={(e) => setHighContrast(e.target.checked)}
-                    className="w-4 h-4 rounded text-[#4F46E5] focus:ring-[#4F46E5]"
-                  />
-                  <div>
-                    <div className="text-[13px] font-semibold">High Contrast</div>
-                    <div className="text-[11px] text-[#6B6660]">Intense background contrast optimization</div>
-                  </div>
-                </label>
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-[#E8E6E1]/50">
+              <div className="pt-2">
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="w-full bg-[#4F46E5] hover:bg-[#4338ca] text-white font-medium py-3 rounded-xl text-[14px] transition-colors disabled:opacity-50"
+                  className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl text-xs transition-all shadow-glow-vermilion disabled:opacity-50"
                 >
-                  {isSaving ? 'Saving Changes...' : 'Save Settings'}
+                  {isSaving ? 'Saving Preferences...' : 'Save All Preferences'}
                 </button>
               </div>
             </div>

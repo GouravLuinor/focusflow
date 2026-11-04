@@ -20,10 +20,10 @@ export function VoiceInputButton({
       <button
         type="button"
         disabled
-        className="p-2 rounded-lg bg-[#D97706]/10 text-[#D97706] border border-[#D97706]/20"
-        title="Transcribing..."
+        className="p-2 rounded-xl bg-accent/10 text-accent border border-accent/20 flex items-center justify-center font-sans"
+        title="Transcribing with Faster-Whisper..."
       >
-        <Loader2 className="h-5 w-5 animate-spin" />
+        <Loader2 className="h-4 w-4 animate-spin" />
       </button>
     );
   }
@@ -33,10 +33,10 @@ export function VoiceInputButton({
       <button
         type="button"
         onClick={onStop}
-        className="p-2 rounded-lg bg-red-50 text-red-500 border border-red-200 animate-pulse"
-        title="Stop recording"
+        className="p-2 rounded-xl bg-destructive/10 text-destructive border border-destructive/30 animate-pulse flex items-center justify-center font-sans shadow-glow-vermilion"
+        title="Stop recording voice note"
       >
-        <MicOff className="h-5 w-5" />
+        <MicOff className="h-4 w-4" />
       </button>
     );
   }
@@ -46,10 +46,10 @@ export function VoiceInputButton({
       type="button"
       onClick={onStart}
       disabled={disabled}
-      className="p-2 rounded-lg bg-[#FAF9F7] hover:bg-[#4F46E5]/10 text-[#6B6660] hover:text-[#4F46E5] border border-[#E8E6E1] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      title="Record voice input"
+      className="p-2 rounded-xl bg-secondary hover:bg-primary/10 text-muted-foreground hover:text-primary border border-border hover:border-primary/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-sans"
+      title="Speak task title with voice capture"
     >
-      <Mic className="h-5 w-5" />
+      <Mic className="h-4 w-4" />
     </button>
   );
 }

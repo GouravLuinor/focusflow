@@ -61,28 +61,28 @@ export function GoalCard({ goal, index }: GoalCardProps) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: 0.05 * index, ease: 'easeOut' }}
-      className="bg-white rounded-xl border border-[#E8E6E1] p-5 hover:scale-[1.01] transition-transform duration-200"
+      className="bg-white dark:bg-dark-surface rounded-xl border border-[#E8E6E1] dark:border-dark-border p-5 hover:scale-[1.01] transition-transform duration-200"
     >
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h4 className="text-[18px] font-medium text-[#1A1A1A] mb-1 font-sans leading-tight">
+          <h4 className="text-[18px] font-medium text-[#1A1A1A] dark:text-dark-text-primary mb-1 font-sans leading-tight">
             {goal.title}
           </h4>
-          <p className="text-[14px] text-[#6B6660] font-sans">
+          <p className="text-[14px] text-[#6B6660] dark:text-dark-text-secondary font-sans">
             {daysLeft}
           </p>
         </div>
-        <GoalIcon className="w-5 h-5 text-[#9E988E] shrink-0" />
+        <GoalIcon className="w-5 h-5 text-[#9E988E] dark:text-dark-text-muted shrink-0" />
       </div>
 
       <div className="space-y-2">
         <div className="flex justify-between text-[12px] font-medium font-sans">
-          <span className="text-[#6B6660]">Progress</span>
-          <span className="text-[#4F46E5] font-semibold">{progress}%</span>
+          <span className="text-[#6B6660] dark:text-dark-text-secondary">Progress</span>
+          <span className="text-[#4F46E5] dark:text-[#818cf8] font-semibold">{progress}%</span>
         </div>
-        <div className="w-full bg-[#f0ecf9] rounded-full h-[6px] overflow-hidden">
+        <div className="w-full bg-[#f0ecf9] dark:bg-dark-background rounded-full h-[6px] overflow-hidden">
           <motion.div
-            className="bg-[#4F46E5] h-full rounded-full"
+            className="bg-[#4F46E5] dark:bg-[#818cf8] h-full rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.5, delay: 0.1 + 0.05 * index }}

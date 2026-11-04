@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertCircle, Check } from 'lucide-react';
+import { AlertCircle, Play, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { FocusBreadcrumb } from '@/components/focus/FocusBreadcrumb';
 import { FocusTaskHeader } from '@/components/focus/FocusTaskHeader';
@@ -44,10 +45,6 @@ interface FocusTaskResponse {
   blocking_tasks: BlockingTask[];
   unlocks_tasks: UnlocksTask[];
   available_actions: string[];
-  schedule_today?: {
-    scheduled_start: string;
-    scheduled_end: string;
-  };
 }
 
 function formatTime(totalSeconds: number): string {
@@ -98,141 +95,110 @@ export default function FocusMode() {
   // Redirect to first executable task if taskId is missing
   useEffect(() => {
     if (!taskId) {
-      const lastTaskId = localStorage.getItem('last_focus_task_id');
-      if (lastTaskId) {
-        navigate(`/focus/${lastTaskId}`, { replace: true });
-      } else if (executableTasks && executableTasks.length > 0) {
+      if (executableTasks && executableTasks.length > 0) {
         navigate(`/focus/${executableTasks[0].id}`, { replace: true });
       }
-    } else {
-      localStorage.setItem('last_focus_task_id', taskId);
     }
   }, [taskId, executableTasks, navigate]);
 
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
-  const [sessionId, setSessionId] = useState<number | string | null>(null);
+  // Session and Timer local state
+  const [sessionId, setSessionId] = useState<number | null>(null);
+  const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
 
-  // Sync elapsed seconds when focusData is loaded or updated, or local storage has active session
+  // Sync state from server on mount / focusData change
   useEffect(() => {
-    if (!taskId) return;
-
-    const savedStart = localStorage.getItem(`focus_session_start_${taskId}`);
-    const savedSessionId = localStorage.getItem(`focus_session_id_${taskId}`);
-
-    if (savedStart && savedSessionId) {
-      const elapsed = Math.floor((new Date().getTime() - new Date(savedStart).getTime()) / 1000);
-      setElapsedSeconds(elapsed > 0 ? elapsed : 0);
-      setSessionId(parseInt(savedSessionId, 10));
-      setIsRunning(true);
-      setIsPausedState(false);
-      setIsCompletedState(false);
-    } else if (focusData?.active_session) {
-      setElapsedSeconds(focusData.active_session.elapsed_seconds);
+    if (focusData?.active_session) {
       setSessionId(focusData.active_session.session_id);
+      setElapsedSeconds(focusData.active_session.elapsed_seconds || 0);
       setIsRunning(true);
+      setIsPaused(false);
       setIsPausedState(false);
-      setIsCompletedState(false);
-
-      // Populate local storage so it persists if they reload
-      const inferredStart = new Date(Date.now() - focusData.active_session.elapsed_seconds * 1000);
-      localStorage.setItem(`focus_session_start_${taskId}`, inferredStart.toISOString());
-      localStorage.setItem(`focus_session_id_${taskId}`, focusData.active_session.session_id.toString());
+    } else if (focusData?.status === 'PAUSED') {
+      setIsPausedState(true);
+      setIsPaused(true);
+      setIsRunning(false);
     } else {
-      // If no local storage and no active session from API, clear states (unless we are showing completed/paused view)
-      if (!isCompletedState && !isPausedState) {
-        setElapsedSeconds(0);
-        setSessionId(null);
-        setIsRunning(false);
-      }
+      setSessionId(null);
+      setIsRunning(false);
+      setIsPaused(false);
+      setElapsedSeconds(0);
+      setIsPausedState(false);
     }
-  }, [taskId, focusData, isCompletedState, isPausedState]);
+  }, [focusData]);
 
-  // Tick the timer up every second if running and not paused
+  // Timer Tick Hook
   useEffect(() => {
-    if (!isRunning || isPaused || isPausedState || isCompletedState) return;
+    let interval: NodeJS.Timeout | null = null;
+    if (isRunning && !isPaused) {
+      interval = setInterval(() => {
+        setElapsedSeconds((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isRunning, isPaused]);
 
-    const interval = setInterval(() => {
-      setElapsedSeconds((prev) => prev + 1);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isRunning, isPaused, isPausedState, isCompletedState]);
-
+  // Start Session Action
   const handleStart = async () => {
     if (!taskId) return;
     try {
-      const response = await apiRequest('/sessions', {
+      const res = await apiRequest('/sessions', {
         method: 'POST',
         body: JSON.stringify({ task_id: parseInt(taskId, 10) }),
       });
-      setSessionId(response.id);
-      setElapsedSeconds(0);
+      setSessionId(res.id);
       setIsRunning(true);
+      setIsPaused(false);
       setIsPausedState(false);
-      setIsCompletedState(false);
-
-      // Store in local storage to prevent timer reset
-      localStorage.setItem(`focus_session_start_${taskId}`, new Date().toISOString());
-      localStorage.setItem(`focus_session_id_${taskId}`, response.id.toString());
-
       queryClient.invalidateQueries({ queryKey: ['focus', taskId] });
-      queryClient.invalidateQueries({ queryKey: ['schedule'] });
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to start session');
+      toast.error(err instanceof Error ? err.message : 'Failed to start session');
     }
   };
 
+  // Pause/Resume Session Action
   const handlePauseToggle = async () => {
     if (!sessionId) return;
     setIsPausing(true);
     try {
-      await apiRequest(`/sessions/${sessionId}/abandon`, { method: 'POST' });
-      
-      // Clean up local storage
-      localStorage.removeItem(`focus_session_start_${taskId}`);
-      localStorage.removeItem(`focus_session_id_${taskId}`);
-
-      // Invalidate queries to trigger global updates
+      if (isPaused || isPausedState) {
+        // Resume
+        await apiRequest(`/sessions/${sessionId}/resume`, { method: 'POST' });
+        setIsPaused(false);
+        setIsPausedState(false);
+        setIsRunning(true);
+      } else {
+        // Pause
+        await apiRequest(`/sessions/${sessionId}/pause`, { method: 'POST' });
+        setIsPaused(true);
+        setIsPausedState(true);
+        setIsRunning(false);
+      }
       queryClient.invalidateQueries({ queryKey: ['focus', taskId] });
-      queryClient.invalidateQueries({ queryKey: ['schedule'] });
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['sessions'] });
-
-      // Update UI to show paused state instead of redirecting
-      setIsRunning(false);
-      setSessionId(null);
-      setIsPausedState(true);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to abandon session');
+      toast.error(err instanceof Error ? err.message : 'Failed to toggle pause');
     } finally {
       setIsPausing(false);
     }
   };
 
+  // Complete Session Action
   const handleComplete = async () => {
-    if (!sessionId) return;
+    if (!sessionId || !taskId) return;
     setIsCompleting(true);
     try {
       await apiRequest(`/sessions/${sessionId}/complete`, { method: 'POST' });
-
-      // Clean up local storage
-      localStorage.removeItem(`focus_session_start_${taskId}`);
-      localStorage.removeItem(`focus_session_id_${taskId}`);
-
-      // Invalidate queries to trigger global updates
-      queryClient.invalidateQueries({ queryKey: ['focus', taskId] });
-      queryClient.invalidateQueries({ queryKey: ['tasks', 'executable'] });
-      queryClient.invalidateQueries({ queryKey: ['schedule'] });
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['sessions'] });
-
-      // Update UI to show completed state instead of redirecting
       setIsRunning(false);
-      setSessionId(null);
+      setIsPaused(false);
       setIsCompletedState(true);
+      queryClient.invalidateQueries({ queryKey: ['focus', taskId] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['schedule'] });
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to complete session');
     } finally {
@@ -240,71 +206,41 @@ export default function FocusMode() {
     }
   };
 
-  // Completed State View
+  // Task Completion Celebration Screen
   if (isCompletedState) {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#FAF9F7] text-[#1A1A1A] p-6 text-center font-sans">
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground p-6 text-center font-sans">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full bg-white border border-[#E8E6E1] p-8 rounded-2xl shadow-sm flex flex-col items-center"
+          className="max-w-md w-full bg-card border border-border rounded-3xl p-8 shadow-medium flex flex-col items-center"
         >
-          <div className="w-16 h-16 rounded-full bg-[#059669]/10 flex items-center justify-center text-[#059669] mb-6">
-            <Check className="w-8 h-8" />
+          <div className="w-16 h-16 rounded-2xl bg-success/10 border border-success/20 flex items-center justify-center text-success mb-6">
+            <span className="text-3xl">🎋</span>
           </div>
-          <h1 className="text-2xl font-semibold mb-3">Task completed ✓</h1>
-          <p className="text-[#6B6660] text-[14px] leading-relaxed mb-8">
-            Excellent focus! "{focusData?.title}" is completed and your focus time has been recorded.
+          <h1 className="text-2xl font-bold tracking-tight mb-2">Focus Session Complete!</h1>
+          <p className="text-xs text-muted-foreground mb-6">
+            Splendid flow session logged. Your adaptive timeline is adjusted.
           </p>
           <button
             onClick={() => navigate('/dashboard')}
-            className="w-full py-3 bg-[#4F46E5] hover:bg-[#4338ca] text-white font-medium rounded-lg transition-colors"
+            className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl text-sm transition-all shadow-glow-vermilion"
           >
-            Back to Dashboard
+            Return to Dashboard
           </button>
         </motion.div>
       </div>
     );
   }
 
-  // Loading state for missing taskId
-  if (!taskId) {
-    if (execLoading) {
-      return (
-        <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#FAF9F7] text-[#1A1A1A]">
-          <div className="w-8 h-8 border-4 border-[#4F46E5] border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-sm text-[#9E988E] font-medium font-sans animate-pulse">Finding focus task...</p>
-        </div>
-      );
-    }
-
-    if (execError || !executableTasks || executableTasks.length === 0) {
-      return (
-        <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#FAF9F7] text-[#1A1A1A] p-6 text-center">
-          <div className="w-16 h-16 rounded-full bg-[#f0ecf9] flex items-center justify-center text-[#4F46E5] mb-6">
-            <AlertCircle className="w-8 h-8 text-[#D97706]" />
-          </div>
-          <h1 className="text-2xl font-semibold mb-2 font-sans text-[#1A1A1A]">No Tasks Available</h1>
-          <p className="text-[#6B6660] max-w-sm mb-6 font-sans">
-            There are no executable tasks currently scheduled or ready for focus mode.
-          </p>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="px-6 py-3 bg-[#4F46E5] hover:bg-[#4F46E5]/90 text-white font-medium rounded-lg transition-all"
-          >
-            Back to Dashboard
-          </button>
-        </div>
-      );
-    }
-  }
-
-  // Loading State for focus session details
-  if (focusLoading) {
+  // Loading State
+  if (focusLoading || (execLoading && !taskId)) {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#FAF9F7] text-[#1A1A1A]">
-        <div className="w-8 h-8 border-4 border-[#4F46E5] border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-sm text-[#9E988E] font-medium font-sans animate-pulse">Loading focus session...</p>
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground">
+        <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-xs text-muted-foreground font-medium font-sans animate-pulse">
+          Entering calm focus sanctuary...
+        </p>
       </div>
     );
   }
@@ -312,52 +248,41 @@ export default function FocusMode() {
   // Error State
   if (focusError || !focusData) {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-[#FAF9F7] text-[#1A1A1A] p-6 text-center">
-        <div className="w-16 h-16 rounded-full bg-[#f0ecf9] flex items-center justify-center text-[#4F46E5] mb-6">
-          <AlertCircle className="w-8 h-8 text-[#D97706]" />
+      <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground p-6 text-center font-sans">
+        <div className="w-14 h-14 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-4">
+          <AlertCircle className="w-7 h-7" />
         </div>
-        <h1 className="text-2xl font-semibold mb-2 font-sans text-[#1A1A1A]">Unable to Load Focus Task</h1>
-        <p className="text-[#6B6660] max-w-sm mb-6 font-sans">
-          There was an error loading the focus task details.
+        <h1 className="text-xl font-semibold mb-2 text-foreground">No Active Task Available</h1>
+        <p className="text-xs text-muted-foreground max-w-sm mb-6">
+          There are currently no tasks queued for focus. Create or select a task from your dashboard.
         </p>
         <button
           onClick={() => navigate('/dashboard')}
-          className="px-6 py-3 bg-[#4F46E5] hover:bg-[#4F46E5]/90 text-white font-medium rounded-lg transition-all"
+          className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl text-xs transition-all inline-flex items-center gap-2"
         >
+          <ArrowLeft className="w-4 h-4" />
           Back to Dashboard
         </button>
       </div>
     );
   }
 
-  // Derive goal title / unlocks label
   const goalTitle = focusData.unlocks_tasks?.length > 0
     ? `Unlocks: ${focusData.unlocks_tasks.map((t) => t.title).join(', ')}`
     : undefined;
 
-  // Format priority label
   const priorityLabel = (() => {
     if (!focusData.priority) return "Medium Priority";
     const p = focusData.priority.toLowerCase();
     return p.charAt(0).toUpperCase() + p.slice(1) + " Priority";
   })();
 
-  // Construct subtasks checkpoint string representation
   const checkpointStr = focusData.progress
     ? `${focusData.progress.subtasks_completed}/${focusData.progress.subtasks_total}`
     : "0/0";
 
   return (
-    <div className="h-screen w-screen flex flex-col items-center justify-center relative overflow-hidden bg-[#FAF9F7] text-[#1A1A1A]">
-      {/* Background visual detail */}
-      <div 
-        className="absolute inset-0 opacity-[0.02] pointer-events-none"
-        style={{
-          backgroundImage: 'radial-gradient(#4f46e5 1px, transparent 1px)',
-          backgroundSize: '32px 32px',
-        }}
-      />
-
+    <div className="h-screen w-screen flex flex-col items-center justify-center relative overflow-hidden bg-background text-foreground font-sans">
       {/* Top Navigation */}
       <FocusBreadcrumb />
 
@@ -365,10 +290,10 @@ export default function FocusMode() {
       <motion.main
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
         className={cn(
           "w-full max-w-[560px] flex flex-col items-center text-center relative z-20",
-          supportMode === 'dyslexia' ? 'px-10 gap-10' : 'px-6 gap-8'
+          supportMode === 'dyslexia' ? 'px-10 gap-8' : 'px-6 gap-6'
         )}
       >
         {/* Task Header & Context */}
@@ -384,11 +309,11 @@ export default function FocusMode() {
 
         {/* Timer display */}
         {isPausedState ? (
-          <div className="flex flex-col items-center gap-4">
-            <div className="text-[64px] font-bold text-[#D97706] tracking-tight tabular-nums font-sans">
+          <div className="flex flex-col items-center gap-3">
+            <div className="text-5xl md:text-6xl font-bold text-accent tracking-tight tabular-nums font-sans">
               {formatTime(elapsedSeconds)}
             </div>
-            <span className="text-sm font-semibold text-[#D97706] bg-[#D97706]/10 px-4 py-1.5 rounded-full uppercase tracking-wider font-sans">
+            <span className="text-xs font-semibold text-accent bg-accent/10 border border-accent/20 px-3 py-1 rounded-full uppercase tracking-wider font-sans">
               Focus Paused
             </span>
           </div>
@@ -411,16 +336,17 @@ export default function FocusMode() {
 
         {/* Actions Grid */}
         {isPausedState ? (
-          <div className="flex flex-col gap-3 w-full max-w-[320px] font-sans">
+          <div className="flex flex-col gap-2.5 w-full max-w-[320px] font-sans">
             <button
               onClick={handleStart}
-              className="w-full py-4 bg-[#4F46E5] hover:bg-[#4338ca] text-white font-medium rounded-lg text-[18px] transition-colors hover:scale-[1.01]"
+              className="w-full py-3.5 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl text-base transition-colors shadow-glow-vermilion flex items-center justify-center gap-2"
             >
+              <Play className="w-4 h-4 fill-current" />
               Resume Focus
             </button>
             <button
               onClick={() => navigate('/dashboard')}
-              className="w-full py-3 bg-transparent text-[#6B6660] hover:text-[#1A1A1A] font-medium rounded-lg text-[14px] transition-colors"
+              className="w-full py-2.5 bg-transparent text-muted-foreground hover:text-foreground font-medium rounded-xl text-xs transition-colors"
             >
               Back to Dashboard
             </button>
@@ -439,8 +365,8 @@ export default function FocusMode() {
 
         {/* Subtle Bottom Meta */}
         {focusData.blocking_tasks?.length > 0 && (
-          <footer className="mt-8 text-center opacity-70">
-            <p className="text-[12px] font-medium text-[#9E988E] tracking-widest uppercase font-sans">
+          <footer className="mt-4 text-center opacity-70">
+            <p className="text-[11px] font-medium text-muted-foreground tracking-widest uppercase font-sans">
               Blocks: {focusData.blocking_tasks.map((t) => t.title).join(', ')}
             </p>
           </footer>

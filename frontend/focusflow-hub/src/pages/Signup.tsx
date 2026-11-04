@@ -53,8 +53,7 @@ export default function Signup() {
     setErrors({});
 
     try {
-      // 1. Call real backend signup API
-      const user = await apiRequest("/auth/signup", {
+      await apiRequest("/auth/signup", {
         method: "POST",
         body: JSON.stringify({
           name,
@@ -63,7 +62,6 @@ export default function Signup() {
         }),
       });
 
-      // 2. Automatically log the user in to obtain a session token
       const authData = await apiRequest("/auth/login", {
         method: "POST",
         body: JSON.stringify({
@@ -72,11 +70,9 @@ export default function Signup() {
         }),
       });
 
-      // 3. Save token and user context
       localStorage.setItem("token", authData.access_token);
+      const user = await apiRequest("/auth/me");
       setUser(user);
-
-      // 4. Redirect to onboarding
       navigate("/onboarding");
     } catch (err) {
       setErrors({
@@ -88,97 +84,86 @@ export default function Signup() {
   };
 
   return (
-    <AuthCard title="Create your account" subtitle="Start building better workflows">
+    <AuthCard
+      title="Create your account"
+      subtitle="Start building calm, adaptive workflows"
+    >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        
-        {/* Full Name Field */}
-        <div className="flex flex-col gap-2">
-          <label className="text-[12px] font-medium text-[#6B6660] font-sans" htmlFor="full-name">
-            Full name
-          </label>
-          <input
-            className={`w-full bg-white border ${
-              errors.name ? "border-[#D97706] focus:ring-[#D97706] focus:border-[#D97706]" : "border-[#E8E6E1] focus:ring-[#4F46E5] focus:border-[#4F46E5]"
-            } rounded-lg p-3 text-[14px] text-[#1A1A1A] placeholder:text-[#9E988E] outline-none transition-all duration-200 focus:ring-2`}
-            id="full-name"
-            name="full-name"
-            placeholder="Alex Johnson"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          {errors.name && (
-            <div className="flex items-center gap-1.5 text-[#D97706] mt-1">
-              <AlertCircle className="h-4 w-4" />
-              <span className="text-[14px] font-normal font-sans leading-none">{errors.name}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Email Field */}
-        <div className="flex flex-col gap-2">
-          <label className="text-[12px] font-medium text-[#6B6660] font-sans" htmlFor="email">
-            Email
-          </label>
-          <input
-            className={`w-full bg-white border ${
-              errors.email ? "border-[#D97706] focus:ring-[#D97706] focus:border-[#D97706]" : "border-[#E8E6E1] focus:ring-[#4F46E5] focus:border-[#4F46E5]"
-            } rounded-lg p-3 text-[14px] text-[#1A1A1A] placeholder:text-[#9E988E] outline-none transition-all duration-200 focus:ring-2`}
-            id="email"
-            name="email"
-            placeholder="alex@example.com"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          {errors.email && (
-            <div className="flex items-center gap-1.5 text-[#D97706] mt-1">
-              <AlertCircle className="h-4 w-4" />
-              <span className="text-[14px] font-normal font-sans leading-none">{errors.email}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Password Field */}
-        <div className="flex flex-col gap-2">
-          <label className="text-[12px] font-medium text-[#6B6660] font-sans" htmlFor="password">
-            Password
-          </label>
-          <input
-            className={`w-full bg-white border ${
-              errors.password ? "border-[#D97706] focus:ring-[#D97706] focus:border-[#D97706]" : "border-[#E8E6E1] focus:ring-[#4F46E5] focus:border-[#4F46E5]"
-            } rounded-lg p-3 text-[14px] text-[#1A1A1A] placeholder:text-[#9E988E] outline-none transition-all duration-200 focus:ring-2`}
-            id="password"
-            name="password"
-            placeholder="••••••••"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          {errors.password && (
-            <div className="flex items-center gap-1.5 text-[#D97706] mt-1">
-              <AlertCircle className="h-4 w-4" />
-              <span className="text-[14px] font-normal font-sans leading-none">{errors.password}</span>
-            </div>
-          )}
-        </div>
-
-        {/* API Error Box */}
         {errors.api && (
-          <div className="flex items-center justify-center gap-2 text-[#D97706] text-[14px] py-2 font-sans">
-            <AlertCircle className="h-[18px] w-[18px]" />
+          <div className="flex items-center gap-2 text-destructive text-xs py-1.5 font-sans bg-destructive/10 p-2.5 rounded-lg">
+            <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{errors.api}</span>
           </div>
         )}
 
-        {/* Submit Button */}
+        {/* Full Name */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-medium text-muted-foreground font-sans" htmlFor="name">
+            Full name
+          </label>
+          <input
+            id="name"
+            name="name"
+            placeholder="Alex Mercer"
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl p-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors"
+          />
+          {errors.name && (
+            <p className="text-xs text-destructive">{errors.name}</p>
+          )}
+        </div>
+
+        {/* Email */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-medium text-muted-foreground font-sans" htmlFor="email">
+            Email address
+          </label>
+          <input
+            id="email"
+            name="email"
+            placeholder="alex@example.com"
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl p-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors"
+          />
+          {errors.email && (
+            <p className="text-xs text-destructive">{errors.email}</p>
+          )}
+        </div>
+
+        {/* Password */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-medium text-muted-foreground font-sans" htmlFor="password">
+            Password (8+ characters)
+          </label>
+          <input
+            id="password"
+            name="password"
+            placeholder="••••••••"
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl p-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors"
+          />
+          {errors.password && (
+            <p className="text-xs text-destructive">{errors.password}</p>
+          )}
+        </div>
+
+        {/* Submit */}
         <button
-          className="w-full bg-[#4F46E5] text-white font-medium text-[18px] py-4 rounded-lg mt-2 hover:opacity-90 active:scale-[0.98] transition-all duration-200 flex justify-center items-center font-sans disabled:opacity-50"
           type="submit"
           disabled={isLoading}
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm py-3.5 rounded-xl mt-2 transition-all duration-150 active:scale-[0.98] flex justify-center items-center font-sans shadow-glow-vermilion disabled:opacity-50"
         >
           {isLoading ? (
-            <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <span className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
           ) : (
             "Create Account"
           )}
@@ -186,14 +171,14 @@ export default function Signup() {
       </form>
 
       {/* Card Footer Link */}
-      <footer className="mt-8 text-center">
-        <p className="text-[14px] text-[#6B6660] font-sans">
+      <div className="mt-6 text-center">
+        <p className="text-xs text-muted-foreground font-sans">
           Already have an account?{" "}
-          <Link to="/login" className="text-[#4F46E5] font-medium hover:underline transition-all">
+          <Link to="/login" className="text-primary font-medium hover:underline transition-colors">
             Sign in
           </Link>
         </p>
-      </footer>
+      </div>
     </AuthCard>
   );
 }

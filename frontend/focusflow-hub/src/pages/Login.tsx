@@ -25,7 +25,6 @@ export default function Login() {
     setError(null);
 
     try {
-      // 1. Call real backend login endpoint
       const data = await apiRequest("/auth/login", {
         method: "POST",
         body: JSON.stringify({
@@ -34,14 +33,9 @@ export default function Login() {
         }),
       });
 
-      // 2. Store session token
       localStorage.setItem("token", data.access_token);
-
-      // 3. Fetch authenticated user profile
       const user = await apiRequest("/auth/me");
       setUser(user);
-
-      // 4. Redirect to dashboard
       navigate("/dashboard");
     } catch (err) {
       setError("Invalid email or password");
@@ -51,49 +45,39 @@ export default function Login() {
   };
 
   return (
-    <AuthCard title="Welcome back" subtitle="Sign in to continue">
+    <AuthCard title="Welcome back" subtitle="Sign in to continue your focus flow">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        
         {/* Email Field */}
-        <div className="flex flex-col gap-2">
-          <label className="text-[12px] font-medium text-[#6B6660] font-sans" htmlFor="email">
-            Email
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-medium text-muted-foreground font-sans" htmlFor="email">
+            Email address
           </label>
           <input
-            className={`w-full bg-white border ${
-              error && !email ? "border-[#D97706] focus:ring-[#D97706] focus:border-[#D97706]" : "border-[#E8E6E1] focus:ring-[#4F46E5] focus:border-[#4F46E5]"
-            } rounded-lg p-3 text-[14px] text-[#1A1A1A] placeholder:text-[#9E988E] outline-none transition-all duration-200 focus:ring-2`}
+            className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl p-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors"
             id="email"
             name="email"
             placeholder="alex@example.com"
             type="email"
+            required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
 
         {/* Password Field */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
           <div className="flex justify-between items-center">
-            <label className="text-[12px] font-medium text-[#6B6660] font-sans" htmlFor="password">
+            <label className="text-xs font-medium text-muted-foreground font-sans" htmlFor="password">
               Password
             </label>
-            <a
-              className="text-[14px] text-[#6B6660] hover:underline transition-all font-sans"
-              href="#"
-              onClick={(e) => e.preventDefault()}
-            >
-              Forgot password?
-            </a>
           </div>
           <input
-            className={`w-full bg-white border ${
-              error && !password ? "border-[#D97706] focus:ring-[#D97706] focus:border-[#D97706]" : "border-[#E8E6E1] focus:ring-[#4F46E5] focus:border-[#4F46E5]"
-            } rounded-lg p-3 text-[14px] text-[#1A1A1A] placeholder:text-[#9E988E] outline-none transition-all duration-200 focus:ring-2`}
+            className="w-full bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary rounded-xl p-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors"
             id="password"
             name="password"
             placeholder="••••••••"
             type="password"
+            required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -101,20 +85,20 @@ export default function Login() {
 
         {/* Error State */}
         {error && (
-          <div className="flex items-center justify-center gap-2 text-[#D97706] text-[14px] py-2 font-sans">
-            <AlertCircle className="h-[18px] w-[18px]" />
+          <div className="flex items-center gap-2 text-destructive text-xs py-1.5 font-sans bg-destructive/10 p-2.5 rounded-lg">
+            <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {/* Submit Button */}
         <button
-          className="w-full bg-[#4F46E5] text-white font-medium text-[18px] py-4 rounded-lg mt-2 hover:opacity-90 active:scale-[0.98] transition-all duration-200 flex justify-center items-center font-sans disabled:opacity-50"
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm py-3.5 rounded-xl mt-2 transition-all duration-150 active:scale-[0.98] flex justify-center items-center font-sans shadow-glow-vermilion disabled:opacity-50"
           type="submit"
           disabled={isLoading}
         >
           {isLoading ? (
-            <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <span className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
           ) : (
             "Sign In"
           )}
@@ -122,10 +106,10 @@ export default function Login() {
       </form>
 
       {/* Card Footer Link */}
-      <div className="mt-8 text-center">
-        <p className="text-[14px] text-[#6B6660] font-sans">
+      <div className="mt-6 text-center">
+        <p className="text-xs text-muted-foreground font-sans">
           Don't have an account?{" "}
-          <Link to="/signup" className="text-[#4F46E5] font-medium hover:underline transition-all">
+          <Link to="/signup" className="text-primary font-medium hover:underline transition-colors">
             Sign up
           </Link>
         </p>

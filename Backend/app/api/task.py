@@ -17,13 +17,13 @@ router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 
 # 🔹 Create Task
-@router.post("/", response_model=TaskResponse)
+@router.post("/", response_model=TaskResponse, status_code=201)
 def create_task(
     data: TaskCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    support_mode = current_user.profile.support_mode
+    support_mode = current_user.profile.support_mode if current_user.profile else "adhd"
 
     return create_task_with_ai(
         db=db,
@@ -33,6 +33,9 @@ def create_task(
         support_mode=support_mode,
         goal_id=data.goal_id,
         parent_task_id=data.parent_task_id,
+        estimated_minutes=data.estimated_minutes,
+        priority=data.priority or "MEDIUM",
+        deadline=data.deadline,
     )
 
 
@@ -88,7 +91,24 @@ def update_task(
     if data.description is not None:
         task.description = data.description
 
-    if data.is_completed is not None:
+    if data.estimated_minutes is not None:
+        task.estimated_minutes = data.estimated_minutes
+
+    if data.priority is not None:
+        task.priority = data.priority
+
+    if data.deadline is not None:
+        task.deadline = data.deadline
+
+    if data.goal_id is not None:
+        task.goal_id = data.goal_id
+
+    if data.status is not None:
+        from app.engine.state_machine import transition_task_status
+        success, msg = transition_task_status(task, data.status)
+        if not success:
+            raise HTTPException(status_code=422, detail=msg)
+    elif data.is_completed is not None:
         if task.is_completed != data.is_completed:
             new_status = "COMPLETED" if data.is_completed else "TODO"
             from app.engine.state_machine import transition_task_status
@@ -171,10 +191,10 @@ def get_focus_mode(
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     
-    # Get active session
+    # Get active or paused session
     active_session = db.query(ExecutionSession).filter(
         ExecutionSession.task_id == task_id,
-        ExecutionSession.status == "ACTIVE",
+        ExecutionSession.status.in_(["ACTIVE", "PAUSED"]),
     ).first()
     
     # Get completed sessions for estimate
@@ -204,8 +224,8 @@ def get_focus_mode(
     unlocks = db.query(Task).filter(Task.id.in_(dependent_ids)).all() if dependent_ids else []
     
     # Get today's schedule
-    from datetime import datetime, timezone
-    now = datetime.now(timezone.utc)
+    from datetime import datetime
+    now = datetime.utcnow()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     today_end = today_start.replace(hour=23, minute=59, second=59)
     
@@ -261,13 +281,18 @@ def get_focus_mode(
         "schedule_today": None,
     }
     
-    # Active session info
+    # Active/Paused session info
     if active_session:
-        elapsed = int((now - active_session.started_at).total_seconds())
+        if active_session.status == "PAUSED" and active_session.duration_seconds is not None:
+            elapsed = active_session.duration_seconds
+        else:
+            elapsed = int((now - active_session.started_at).total_seconds())
+            
         response["active_session"] = {
             "session_id": active_session.id,
             "started_at": active_session.started_at.isoformat(),
             "elapsed_seconds": elapsed,
+            "status": active_session.status,
         }
     else:
         response["active_session"] = None

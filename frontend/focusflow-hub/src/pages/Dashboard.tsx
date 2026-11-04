@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -55,6 +56,11 @@ const AVAILABLE_MINUTES = 90;
 export default function Dashboard() {
   const { isAuthenticated, user, supportMode } = useApp();
 
+  const [availableMinutes, setAvailableMinutes] = useState(() => {
+    const saved = localStorage.getItem('preferred_daily_minutes');
+    return saved ? parseInt(saved, 10) : AVAILABLE_MINUTES;
+  });
+
   /* ── All hooks unconditionally up-front ──────────────────── */
 
   const { data: profile, isLoading: profileLoading } = useQuery<Profile>({
@@ -64,12 +70,18 @@ export default function Dashboard() {
     enabled: isAuthenticated,
   });
 
+  useEffect(() => {
+    if (profile?.available_minutes !== undefined) {
+      setAvailableMinutes(profile.available_minutes);
+    }
+  }, [profile]);
+
   const { data: scheduleData, isLoading: scheduleLoading } = useQuery<ScheduleResponse>({
-    queryKey: ['schedule', 'recommended'],
+    queryKey: ['schedule', 'recommended', availableMinutes],
     queryFn: () =>
       apiRequest('/schedule/generate', {
         method: 'POST',
-        body: JSON.stringify({ available_minutes: AVAILABLE_MINUTES, save_plan: false }),
+        body: JSON.stringify({ available_minutes: availableMinutes, save_plan: false }),
       }),
     retry: 1,
     staleTime: 5 * 60 * 1000,
@@ -78,7 +90,10 @@ export default function Dashboard() {
 
   const { data: blocksData, isLoading: blocksLoading } = useQuery<ScheduleBlock[]>({
     queryKey: ['schedule', 'blocks'],
-    queryFn: () => apiRequest('/schedule/blocks?status=PLANNED&status=ACTIVE&status=COMPLETED'),
+    queryFn: async () => {
+      const allBlocks = await apiRequest('/schedule/blocks');
+      return allBlocks.filter((b: any) => ['PLANNED', 'ACTIVE', 'COMPLETED'].includes(b.status));
+    },
     retry: 1,
     staleTime: 60 * 1000,
     enabled: isAuthenticated && !!profile,
@@ -176,8 +191,12 @@ export default function Dashboard() {
         <div className="max-w-[1080px] mx-auto mb-8 flex justify-between items-end">
           <GreetingHeader
             name={displayName}
-            availableMinutes={profile?.available_minutes ?? AVAILABLE_MINUTES}
+            availableMinutes={availableMinutes}
             isEmpty={false}
+            onMinutesChange={(mins) => {
+              setAvailableMinutes(mins);
+              localStorage.setItem('preferred_daily_minutes', mins.toString());
+            }}
           />
         </div>
 
@@ -195,7 +214,7 @@ export default function Dashboard() {
             )}
 
             {/* Today's Plan Section */}
-            <TodaysPlanSection blocks={blocks} tasks={allTasks || []} />
+            <TodaysPlanSection blocks={blocks} tasks={allTasks || []} availableMinutes={availableMinutes} />
           </div>
 
           {/* RIGHT COLUMN (45% - Hidden in ADHD mode) */}

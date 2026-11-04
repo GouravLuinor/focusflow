@@ -23,6 +23,9 @@ const containerVariants = {
 export function ActiveGoalsSection({ goals }: ActiveGoalsSectionProps) {
   const navigate = useNavigate();
   const [showCreateGoal, setShowCreateGoal] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+
+  const displayGoals = showAll ? goals : goals.slice(0, 3);
 
   return (
     <section>
@@ -52,19 +55,21 @@ export function ActiveGoalsSection({ goals }: ActiveGoalsSectionProps) {
             animate="show"
             className="flex flex-col gap-4"
           >
-            {goals.slice(0, 3).map((goal, i) => (
+            {displayGoals.map((goal, i) => (
               <GoalCard key={goal.id} goal={goal} index={i} />
             ))}
           </motion.div>
 
-          <div className="flex justify-center mt-2">
-            <button
-              onClick={() => navigate('/goals')}
-              className="text-[12px] font-medium text-[#4F46E5] hover:underline opacity-80 hover:opacity-100 transition-opacity font-sans"
-            >
-              View all goals
-            </button>
-          </div>
+          {goals.length > 3 && (
+            <div className="flex justify-center mt-2">
+              <button
+                onClick={() => setShowAll(!showAll)}
+                className="text-[12px] font-medium text-[#4F46E5] hover:underline opacity-80 hover:opacity-100 transition-opacity font-sans"
+              >
+                {showAll ? 'Show less' : 'View all goals'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

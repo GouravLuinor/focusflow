@@ -110,6 +110,61 @@ def abandon_session(db: Session, session_id: int, user_id: int):
     return session
 
 
+def pause_session(db: Session, session_id: int, user_id: int):
+    """Pause an active execution session."""
+    session = db.query(ExecutionSession).filter(
+        ExecutionSession.id == session_id,
+        ExecutionSession.user_id == user_id,
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    task = db.query(Task).filter(Task.id == session.task_id).first()
+    if task:
+        success, msg = transition_task_status(task, "PAUSED")
+        if not success and task.status != "PAUSED":
+            raise HTTPException(status_code=422, detail=msg)
+            
+    now = datetime.utcnow()
+    session.ended_at = now
+    if session.started_at:
+        session.duration_seconds = int((now - session.started_at).total_seconds())
+    session.status = "PAUSED"
+    
+    log_event(db, session.task_id, user_id, "TASK_PAUSED",
+              metadata={"session_id": session_id, "reason": "user_paused"})
+    
+    db.commit()
+    db.refresh(session)
+    return session
+
+
+def resume_session(db: Session, session_id: int, user_id: int):
+    """Resume a paused execution session."""
+    session = db.query(ExecutionSession).filter(
+        ExecutionSession.id == session_id,
+        ExecutionSession.user_id == user_id,
+    ).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    task = db.query(Task).filter(Task.id == session.task_id).first()
+    if task:
+        success, msg = transition_task_status(task, "IN_PROGRESS")
+        if not success and task.status != "IN_PROGRESS":
+            raise HTTPException(status_code=422, detail=msg)
+            
+    session.status = "ACTIVE"
+    session.ended_at = None
+    
+    log_event(db, session.task_id, user_id, "TASK_STARTED",
+              metadata={"session_id": session_id, "reason": "user_resumed"})
+    
+    db.commit()
+    db.refresh(session)
+    return session
+
+
 def get_sessions(db: Session, user_id: int, task_id: int = None) -> list:
     """Get execution sessions, optionally filtered by task."""
     query = db.query(ExecutionSession).filter(ExecutionSession.user_id == user_id)

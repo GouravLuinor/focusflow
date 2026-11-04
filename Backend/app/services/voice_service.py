@@ -6,11 +6,12 @@ import os
 _model = None
 
 
-def get_model() -> WhisperModel:
+def get_model():
     global _model
     if _model is None:
-        # tiny model: ~75MB, very fast, good enough for task dictation
+        print("Loading Whisper model from cache...")
         _model = WhisperModel("tiny", device="cpu", compute_type="int8")
+        print("Whisper model ready.")
     return _model
 
 

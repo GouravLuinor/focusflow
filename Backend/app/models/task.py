@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.db.base import Base
 
@@ -14,6 +14,7 @@ class Task(Base):
     description = Column(String, nullable=True)
 
     is_completed = Column(Boolean, default=False)
+    status = Column(String, default="TODO", nullable=False, index=True)  # TODO, IN_PROGRESS, PAUSED, COMPLETED, CANCELLED
 
     user_id = Column(Integer, ForeignKey("users.id"))
     goal_id = Column(Integer, ForeignKey("goals.id"), nullable=True)
@@ -23,8 +24,8 @@ class Task(Base):
     actual_minutes = Column(Integer, nullable=True)
     priority = Column(String, default="MEDIUM")  # LOW, MEDIUM, HIGH, URGENT
     deadline = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", backref="tasks")
     goal = relationship("Goal", back_populates="tasks")
@@ -57,28 +58,3 @@ class Task(Base):
     schedule_blocks = relationship("ScheduleBlock", back_populates="task", cascade="all, delete-orphan")
     execution_sessions = relationship("ExecutionSession", back_populates="task", cascade="all, delete-orphan")
     events = relationship("TaskEvent", back_populates="task", cascade="all, delete-orphan")
-
-    @property
-    def status(self) -> str:
-        if self.is_completed:
-            return "COMPLETED"
-        active = next((s for s in self.execution_sessions if s.status == "ACTIVE"), None)
-        if active:
-            return "IN_PROGRESS"
-        if self.events:
-            sorted_events = sorted(self.events, key=lambda e: e.created_at, reverse=True)
-            if sorted_events and sorted_events[0].event_type == "TASK_CANCELLED":
-                return "CANCELLED"
-        if self.execution_sessions:
-            return "PAUSED"
-        return "TODO"
-
-    @status.setter
-    def status(self, value: str):
-        val = value.upper()
-        if val == "COMPLETED":
-            self.is_completed = True
-        else:
-            self.is_completed = False
-
-

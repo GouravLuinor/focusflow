@@ -40,3 +40,10 @@ Thumbs.db
 *.sqlite
 *.sqlite3
 
+
+# Test artifacts (Playwright output, audit screenshots)
+**/test-results/
+**/playwright-report/
+screenshots/
+**/screenshots/
+diagnostic-report.md
