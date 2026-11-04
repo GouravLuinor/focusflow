@@ -206,6 +206,22 @@ export default function FocusMode() {
     }
   };
 
+  // Generate AI micro-steps for a task that has none (e.g. from goal decomposition)
+  const [isGeneratingSteps, setIsGeneratingSteps] = useState(false);
+  const handleGenerateSteps = async () => {
+    if (!taskId) return;
+    setIsGeneratingSteps(true);
+    try {
+      const steps = await apiRequest<FocusStep[]>(`/tasks/${taskId}/steps/generate`, { method: 'POST' });
+      queryClient.setQueryData<FocusTaskResponse>(['focus', taskId], (old) => (old ? { ...old, steps } : old));
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not generate steps');
+    } finally {
+      setIsGeneratingSteps(false);
+    }
+  };
+
   // Pause/Resume Session Action
   const handlePauseToggle = async () => {
     if (!sessionId) {
@@ -380,6 +396,8 @@ export default function FocusMode() {
           pendingStepId={pendingStepId}
           subtasksCompleted={focusData.progress?.subtasks_completed || 0}
           subtasksTotal={focusData.progress?.subtasks_total || 0}
+          onGenerateSteps={handleGenerateSteps}
+          isGeneratingSteps={isGeneratingSteps}
         />
 
         {/* Actions Grid */}

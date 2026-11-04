@@ -6,6 +6,7 @@ from app.core.auth import get_current_user
 from app.models.step import Step
 from app.models.task import Task
 from app.schemas.step import StepCreate, StepUpdate, StepResponse
+from app.services.task_service import generate_steps_for_task
 
 router = APIRouter(prefix="/tasks/{task_id}/steps", tags=["steps"])
 
@@ -38,6 +39,16 @@ def create_step(
     db.refresh(step)
 
     return step
+
+
+# 🔹 Generate AI Steps for an existing task without steps
+@router.post("/generate", response_model=list[StepResponse], status_code=201)
+def generate_steps(
+    task_id: int,
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    return generate_steps_for_task(db, user.id, task_id)
 
 
 # 🔹 Get Steps for Task

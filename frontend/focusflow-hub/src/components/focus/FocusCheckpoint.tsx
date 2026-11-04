@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, ChevronDown, Circle } from 'lucide-react';
+import { Check, ChevronDown, Circle, Sparkles } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
 
@@ -17,6 +17,9 @@ interface FocusCheckpointProps {
   /** Fallback progress when a task has no steps but has subtasks. */
   subtasksCompleted?: number;
   subtasksTotal?: number;
+  /** When provided, a task with no steps offers to generate them with AI. */
+  onGenerateSteps?: () => void;
+  isGeneratingSteps?: boolean;
 }
 
 export function FocusCheckpoint({
@@ -25,6 +28,8 @@ export function FocusCheckpoint({
   pendingStepId = null,
   subtasksCompleted = 0,
   subtasksTotal = 0,
+  onGenerateSteps,
+  isGeneratingSteps = false,
 }: FocusCheckpointProps) {
   const { supportMode } = useApp();
   // ADHD mode: show only the current step by default to reduce clutter.
@@ -40,14 +45,28 @@ export function FocusCheckpoint({
   );
 
   if (steps.length === 0) {
+    const canGenerate = subtasksTotal === 0 && !!onGenerateSteps;
     return (
-      <section className={cardClass} aria-label="Task steps">
+      <section className={cardClass} aria-label="Task steps" aria-busy={isGeneratingSteps}>
         <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary" aria-hidden />
         <p className="text-sm text-muted-foreground pl-2">
           {subtasksTotal > 0
             ? `${subtasksCompleted} of ${subtasksTotal} subtasks done`
-            : 'No steps for this task — just focus on getting it done.'}
+            : canGenerate
+              ? 'No steps yet. Want a few small ones to get started?'
+              : 'No steps for this task — just focus on getting it done.'}
         </p>
+        {canGenerate && (
+          <button
+            type="button"
+            onClick={onGenerateSteps}
+            disabled={isGeneratingSteps}
+            className="ml-2 self-start inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 hover:bg-primary/15 text-primary text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
+          >
+            <Sparkles className={cn('w-4 h-4', isGeneratingSteps && 'animate-pulse')} />
+            {isGeneratingSteps ? 'Breaking it down...' : 'Break it down with AI'}
+          </button>
+        )}
       </section>
     );
   }
