@@ -1,17 +1,22 @@
 from faster_whisper import WhisperModel
 import tempfile
 import os
+import threading
 
 # Load model once at module level (lazy)
 _model = None
+_model_lock = threading.Lock()
 
 
 def get_model():
     global _model
     if _model is None:
-        print("Loading Whisper model from cache...")
-        _model = WhisperModel("tiny", device="cpu", compute_type="int8")
-        print("Whisper model ready.")
+        # Requests run in worker threads; make sure only one loads the model.
+        with _model_lock:
+            if _model is None:
+                print("Loading Whisper model from cache...")
+                _model = WhisperModel("tiny", device="cpu", compute_type="int8")
+                print("Whisper model ready.")
     return _model
 
 
