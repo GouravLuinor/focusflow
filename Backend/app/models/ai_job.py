@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.db.base import Base
+from app.core.config import GEMINI_MODEL
 
 
 class AIJob(Base):
@@ -12,7 +13,7 @@ class AIJob(Base):
     goal_id = Column(Integer, ForeignKey("goals.id"), nullable=True)
     status = Column(String, default="PENDING")  # PENDING, RUNNING, SUCCEEDED, FAILED
     provider = Column(String, default="gemini")  # AI provider name
-    model = Column(String, default="gemini-3.1-flash-lite-preview")
+    model = Column(String, default=GEMINI_MODEL)
     prompt_tokens = Column(Integer, nullable=True)
     completion_tokens = Column(Integer, nullable=True)
     latency_ms = Column(Integer, nullable=True)

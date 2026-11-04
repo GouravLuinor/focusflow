@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from dotenv import load_dotenv
 from google import genai
+from app.core.config import GEMINI_MODEL
 import redis
 
 env_path = Path(__file__).resolve().parent.parent.parent / ".env"
@@ -108,7 +109,7 @@ def generate_ai_steps(title: str, support_mode: str = "adhd") -> list[str]:
 
     try:
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model=GEMINI_MODEL,
             contents=decomposition_prompt,
         )
 
@@ -206,7 +207,7 @@ Rules:
 - Return ONLY the JSON, no markdown, no explanation"""
 
     try:
-        response = client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
+        response = client.models.generate_content(model=GEMINI_MODEL, contents=prompt)
         match = re.search(r"\{.*\}", (response.text or "").strip(), re.DOTALL)
         raw = json.loads(match.group(0)) if match else {}
     except Exception as e:

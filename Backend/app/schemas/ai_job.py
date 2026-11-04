@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
+from app.core.config import GEMINI_MODEL
 from datetime import datetime
 from enum import Enum
 
@@ -14,7 +15,7 @@ class AIJobStatus(str, Enum):
 class AIJobCreate(BaseModel):
     goal_id: int
     provider: str = "gemini"
-    model: str = "gemini-3.1-flash-lite-preview"
+    model: str = GEMINI_MODEL
 
 
 class AIJobResponse(BaseModel):

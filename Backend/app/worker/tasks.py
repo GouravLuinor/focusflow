@@ -6,6 +6,7 @@ import os
 import time
 from datetime import datetime
 from app.core.celery_config import celery_app
+from app.core.config import GEMINI_MODEL
 from app.models.ai_job import AIJob
 from app.models.task import Task
 from app.models.task_dependency import TaskDependency
@@ -227,7 +228,7 @@ def _call_gemini(prompt: str) -> str:
     client = genai.Client(api_key=api_key)
     
     response = client.models.generate_content(
-        model="gemini-3.1-flash-lite-preview",
+        model=GEMINI_MODEL,
         contents=prompt,
     )
     
