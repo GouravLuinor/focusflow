@@ -8,6 +8,7 @@ from app.services import dependency_service
 from app.db.deps import get_db
 from app.core.auth import get_current_user
 from app.models.task import Task
+from app.models.goal import Goal
 from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse
 from app.models.execution_session import ExecutionSession
 from app.models.schedule_block import ScheduleBlock
@@ -101,7 +102,20 @@ def update_task(
         task.deadline = data.deadline
 
     if data.goal_id is not None:
+        goal = db.query(Goal).filter(Goal.id == data.goal_id, Goal.user_id == user.id).first()
+        if not goal:
+            raise HTTPException(status_code=404, detail="Goal not found")
         task.goal_id = data.goal_id
+
+    if data.parent_task_id is not None:
+        if data.parent_task_id == task.id:
+            raise HTTPException(status_code=422, detail="A task cannot be its own parent")
+        parent = db.query(Task).filter(
+            Task.id == data.parent_task_id, Task.user_id == user.id
+        ).first()
+        if not parent:
+            raise HTTPException(status_code=404, detail="Parent task not found")
+        task.parent_task_id = data.parent_task_id
 
     if data.status is not None:
         from app.engine.state_machine import transition_task_status
