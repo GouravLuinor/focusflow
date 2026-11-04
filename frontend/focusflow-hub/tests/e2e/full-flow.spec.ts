@@ -843,7 +843,7 @@ test.describe('FocusFlow Full E2E Test Suite', () => {
         await page.waitForLoadState('networkidle');
         await page.waitForTimeout(1000);
 
-        const checkpointCard = page.locator('section').filter({ hasText: /checkpoint/i }).first();
+        const checkpointCard = page.locator('section[aria-label="Task steps"]').first();
         const hasP7 = await checkpointCard.evaluate(el => el.classList.contains('p-7')).catch(() => false);
 
         if (hasLgText && hasP7) {

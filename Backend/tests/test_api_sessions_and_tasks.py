@@ -153,3 +153,30 @@ def test_wrong_password_returns_401(client, auth_headers):
     res = client.post("/auth/login", json={"email": "alice@example.com", "password": "nope"})
     assert res.status_code == 401
     assert res.json()["detail"] == "Invalid email or password"
+
+
+# ------------------------------------------------------------------
+# Goals list filter / focus steps
+# ------------------------------------------------------------------
+
+def test_goal_list_honours_status_filter(client, auth_headers):
+    client.post("/goals/", json={"title": "Active one"}, headers=auth_headers)
+    client.post("/goals/", json={"title": "Old one", "status": "ARCHIVED"}, headers=auth_headers)
+
+    active = client.get("/goals?status=ACTIVE", headers=auth_headers).json()
+    assert [g["title"] for g in active] == ["Active one"]
+
+    everything = client.get("/goals", headers=auth_headers).json()
+    assert {g["title"] for g in everything} == {"Active one", "Old one"}
+
+    assert client.get("/goals?status=BOGUS", headers=auth_headers).status_code == 422
+
+
+def test_focus_view_includes_ordered_steps(client, auth_headers):
+    task = _create_task(client, auth_headers)
+    step_id = task["steps"][0]["id"]
+    client.put(f"/tasks/{task['id']}/steps/{step_id}", json={"is_completed": True}, headers=auth_headers)
+
+    focus = client.get(f"/tasks/{task['id']}/focus", headers=auth_headers).json()
+    assert [s["content"] for s in focus["steps"]] == ["Step one", "Step two"]
+    assert [s["is_completed"] for s in focus["steps"]] == [True, False]

@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { FocusBreadcrumb } from '@/components/focus/FocusBreadcrumb';
 import { FocusTaskHeader } from '@/components/focus/FocusTaskHeader';
 import { FocusTimer } from '@/components/focus/FocusTimer';
-import { FocusCheckpoint } from '@/components/focus/FocusCheckpoint';
+import { FocusCheckpoint, type FocusStep } from '@/components/focus/FocusCheckpoint';
 import { FocusActions } from '@/components/focus/FocusActions';
 import { apiRequest } from '@/lib/api';
 import { useApp } from '@/contexts/AppContext';
@@ -46,6 +46,7 @@ interface FocusTaskResponse {
   blocking_tasks: BlockingTask[];
   unlocks_tasks: UnlocksTask[];
   available_actions: string[];
+  steps?: FocusStep[];
 }
 
 interface TaskEstimate {
@@ -174,6 +175,37 @@ export default function FocusMode() {
     }
   };
 
+  // Toggle a step's completion (optimistic, rolled back on failure)
+  const [pendingStepId, setPendingStepId] = useState<number | null>(null);
+  const handleToggleStep = async (step: FocusStep) => {
+    if (!taskId) return;
+    const key = ['focus', taskId];
+    const previous = queryClient.getQueryData<FocusTaskResponse>(key);
+    const nextCompleted = !step.is_completed;
+
+    queryClient.setQueryData<FocusTaskResponse>(key, (old) =>
+      old
+        ? {
+            ...old,
+            steps: old.steps?.map((st) => (st.id === step.id ? { ...st, is_completed: nextCompleted } : st)),
+          }
+        : old
+    );
+    setPendingStepId(step.id);
+    try {
+      await apiRequest(`/tasks/${taskId}/steps/${step.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ is_completed: nextCompleted }),
+      });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    } catch (err) {
+      queryClient.setQueryData(key, previous);
+      toast.error(err instanceof Error ? err.message : 'Could not update step');
+    } finally {
+      setPendingStepId(null);
+    }
+  };
+
   // Pause/Resume Session Action
   const handlePauseToggle = async () => {
     if (!sessionId) {
@@ -295,10 +327,6 @@ export default function FocusMode() {
     return p.charAt(0).toUpperCase() + p.slice(1) + " Priority";
   })();
 
-  const checkpointStr = focusData.progress
-    ? `${focusData.progress.subtasks_completed}/${focusData.progress.subtasks_total}`
-    : "0/0";
-
   return (
     <div className="h-screen w-screen flex flex-col items-center justify-center relative overflow-hidden bg-background text-foreground font-sans">
       {/* Top Navigation */}
@@ -345,11 +373,13 @@ export default function FocusMode() {
           />
         )}
 
-        {/* Current Checkpoint Card */}
+        {/* Current step & checklist */}
         <FocusCheckpoint
-          checkpoint={checkpointStr}
-          completedCount={focusData.progress?.subtasks_completed || 0}
-          totalCount={focusData.progress?.subtasks_total || 0}
+          steps={focusData.steps ?? []}
+          onToggleStep={handleToggleStep}
+          pendingStepId={pendingStepId}
+          subtasksCompleted={focusData.progress?.subtasks_completed || 0}
+          subtasksTotal={focusData.progress?.subtasks_total || 0}
         />
 
         {/* Actions Grid */}

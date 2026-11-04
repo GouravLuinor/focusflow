@@ -293,6 +293,16 @@ def get_focus_mode(
         ],
         "available_actions": actions,
         "schedule_today": None,
+        # Micro-steps for the task, in order — the focus checkpoint list.
+        "steps": [
+            {
+                "id": step.id,
+                "content": step.content,
+                "order": step.order,
+                "is_completed": bool(step.is_completed),
+            }
+            for step in sorted(task.steps, key=lambda st: (st.order or 0, st.id))
+        ],
     }
     
     # Active/Paused session info
