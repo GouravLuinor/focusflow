@@ -7,16 +7,16 @@ export function ScheduleHeader() {
       <div className="mb-4">
         <Link
           to="/dashboard"
-          className="inline-flex items-center gap-2 text-[14px] text-[#6B6660] hover:text-[#1A1A1A] transition-colors"
+          className="inline-flex items-center gap-2 text-[14px] text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Dashboard</span>
         </Link>
       </div>
-      <h2 className="text-[32px] font-semibold text-[#1A1A1A] mb-1 tracking-tight">
+      <h2 className="text-[32px] font-semibold text-foreground mb-1 tracking-tight">
         Schedule
       </h2>
-      <p className="text-[16px] text-[#6B6660]">
+      <p className="text-[16px] text-muted-foreground">
         Your planned focus sessions
       </p>
     </div>

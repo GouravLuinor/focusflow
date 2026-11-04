@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { GraduationCap, Globe, Briefcase, Trophy } from 'lucide-react';
-import { differenceInDays, parseISO } from 'date-fns';
+import { describeDeadline } from '@/lib/deadline';
 
 export interface Goal {
   id: number;
@@ -45,21 +45,9 @@ function computeProgress(goal: Goal): number {
   return 0;
 }
 
-function daysRemaining(deadline?: string): string {
-  if (!deadline) return 'No strict deadline';
-  try {
-    const days = differenceInDays(parseISO(deadline), new Date());
-    if (days < 0) return 'Overdue';
-    if (days === 0) return 'Due today';
-    return `${days} day${days === 1 ? '' : 's'} remaining`;
-  } catch {
-    return 'No strict deadline';
-  }
-}
-
 export function GoalCard({ goal, index }: GoalCardProps) {
   const progress = computeProgress(goal);
-  const daysLeft = daysRemaining(goal.deadline);
+  const daysLeft = describeDeadline(goal.deadline);
   const GoalIcon = getGoalIcon(goal.title);
 
   return (
@@ -71,28 +59,28 @@ export function GoalCard({ goal, index }: GoalCardProps) {
     <Link
       to={`/goal/${goal.id}`}
       aria-label={`Open goal: ${goal.title}`}
-      className="block bg-white dark:bg-dark-surface rounded-xl border border-[#E8E6E1] dark:border-dark-border p-5 hover:scale-[1.01] hover:border-primary/40 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="block bg-card rounded-xl border border-border p-5 hover:scale-[1.01] hover:border-primary/40 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h4 className="text-[18px] font-medium text-[#1A1A1A] dark:text-dark-text-primary mb-1 font-sans leading-tight">
+          <h4 className="text-[18px] font-medium text-foreground mb-1 font-sans leading-tight">
             {goal.title}
           </h4>
-          <p className="text-[14px] text-[#6B6660] dark:text-dark-text-secondary font-sans">
+          <p className="text-[14px] text-muted-foreground font-sans">
             {daysLeft}
           </p>
         </div>
-        <GoalIcon className="w-5 h-5 text-[#9E988E] dark:text-dark-text-muted shrink-0" />
+        <GoalIcon className="w-5 h-5 text-muted-foreground shrink-0" />
       </div>
 
       <div className="space-y-2">
         <div className="flex justify-between text-[12px] font-medium font-sans">
-          <span className="text-[#6B6660] dark:text-dark-text-secondary">Progress</span>
-          <span className="text-[#4F46E5] dark:text-[#818cf8] font-semibold">{progress}%</span>
+          <span className="text-muted-foreground">Progress</span>
+          <span className="text-primary dark:text-primary font-semibold">{progress}%</span>
         </div>
-        <div className="w-full bg-[#f0ecf9] dark:bg-dark-background rounded-full h-[6px] overflow-hidden">
+        <div className="w-full bg-muted rounded-full h-[6px] overflow-hidden">
           <motion.div
-            className="bg-[#4F46E5] dark:bg-[#818cf8] h-full rounded-full"
+            className="bg-primary dark:bg-primary h-full rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.5, delay: 0.1 + 0.05 * index }}

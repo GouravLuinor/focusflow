@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -8,17 +8,20 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppProvider, useApp, getStoredAccessibility } from "./contexts/AppContext";
 import { apiRequest } from "@/lib/api";
 
-import Landing from "./pages/Landing";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import Onboarding from "./pages/Onboarding";
-import Dashboard from "./pages/Dashboard";
-import NotFound from "./pages/NotFound";
-import FocusMode from "./pages/FocusMode";
-import GoalDetail from "./pages/GoalDetail";
-import ScheduleView from "./pages/ScheduleView";
-import Insights from "./pages/Insights";
-import Settings from "./pages/Settings";
+import { AppLoader } from "@/components/shared/AppLoader";
+
+// Route-level code splitting: each page is fetched the first time it's visited.
+const Landing = lazy(() => import("./pages/Landing"));
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const FocusMode = lazy(() => import("./pages/FocusMode"));
+const GoalDetail = lazy(() => import("./pages/GoalDetail"));
+const ScheduleView = lazy(() => import("./pages/ScheduleView"));
+const Insights = lazy(() => import("./pages/Insights"));
+const Settings = lazy(() => import("./pages/Settings"));
 
 const queryClient = new QueryClient();
 
@@ -75,15 +78,12 @@ function AppInitializer() {
   }, [setUser, setSupportMode, setOnboardingComplete, setAccessibility]);
 
   if (isInitializing) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p>Initializing application...</p>
-      </div>
-    );
+    return <AppLoader label="Restoring your session" />;
   }
 
   return (
     <BrowserRouter>
+      <Suspense fallback={<AppLoader />}>
       <Routes>
         <Route path="/" element={<HomeRoute />} />
         <Route path="/login" element={<Login />} />
@@ -98,6 +98,7 @@ function AppInitializer() {
         <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

@@ -19,6 +19,7 @@ import { WorkflowGraph } from '@/components/goals/WorkflowGraph';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/api';
+import { describeDeadline, parseDeadline } from '@/lib/deadline';
 
 interface Step {
   id: number;
@@ -161,8 +162,8 @@ export default function GoalDetail() {
     return (
       <DashboardLayout>
         <div className="max-w-7xl mx-auto px-6 md:px-8 py-8 font-sans flex flex-col items-center justify-center min-h-[50vh]">
-          <div className="w-8 h-8 border-4 border-[#4F46E5] border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-sm text-[#9E988E] font-medium font-sans">Loading goal details...</p>
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-sm text-muted-foreground font-medium font-sans">Loading goal details...</p>
         </div>
       </DashboardLayout>
     );
@@ -173,16 +174,16 @@ export default function GoalDetail() {
     return (
       <DashboardLayout>
         <div className="max-w-7xl mx-auto px-6 md:px-8 py-8 font-sans flex flex-col items-center justify-center min-h-[50vh] text-center">
-          <div className="w-16 h-16 rounded-full bg-[#f0ecf9] flex items-center justify-center text-[#4F46E5] mb-6">
-            <AlertCircle className="w-8 h-8 text-[#D97706]" />
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-primary mb-6">
+            <AlertCircle className="w-8 h-8 text-accent" />
           </div>
-          <h1 className="text-2xl font-semibold mb-2 text-[#1A1A1A]">Goal Not Found</h1>
-          <p className="text-[#6B6660] max-w-sm mb-6">
+          <h1 className="text-2xl font-semibold mb-2 text-foreground">Goal Not Found</h1>
+          <p className="text-muted-foreground max-w-sm mb-6">
             {!goalId ? "No goal ID was specified." : "There was a problem loading this goal."}
           </p>
           <button
             onClick={() => navigate('/dashboard')}
-            className="px-6 py-3 bg-[#4F46E5] hover:bg-[#4F46E5]/90 text-white font-medium rounded-lg transition-all"
+            className="px-6 py-3 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-all"
           >
             Back to Dashboard
           </button>
@@ -197,20 +198,14 @@ export default function GoalDetail() {
   const tasksCompleted = isNew ? 0 : (tasks?.filter((t) => t.is_completed).length || 0);
   const progress = tasksTotal > 0 ? Math.round((tasksCompleted / tasksTotal) * 100) : 0;
 
-  const daysRemaining = (() => {
-    if (isNew || !goal?.deadline) return 0;
-    const deadlineDate = new Date(goal.deadline);
-    const today = new Date();
-    const diffTime = deadlineDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? diffDays : 0;
-  })();
+  const deadlineStatus = describeDeadline(isNew ? null : goal?.deadline);
 
   // Formatting strings for Settings
   const statusLabel = isNew ? "Draft" : (goal.status.charAt(0).toUpperCase() + goal.status.slice(1).toLowerCase());
   const priorityLabel = isNew ? "Medium" : (goal.priority.charAt(0).toUpperCase() + goal.priority.slice(1).toLowerCase());
-  const deadlineLabel = !isNew && goal?.deadline
-    ? new Date(goal.deadline).toLocaleDateString(undefined, {
+  const deadlineDate = isNew ? null : parseDeadline(goal?.deadline);
+  const deadlineLabel = deadlineDate
+    ? deadlineDate.toLocaleDateString(undefined, {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
@@ -285,15 +280,15 @@ export default function GoalDetail() {
         <GoalHeader
           title={goalTitle}
           progress={progress}
-          daysRemaining={daysRemaining}
+          deadlineStatus={deadlineStatus}
           tasksCompleted={tasksCompleted}
           tasksTotal={tasksTotal}
         />
 
         {isDecomposing ? (
           <div className="py-24 flex flex-col items-center justify-center text-center">
-            <div className="w-12 h-12 border-4 border-[#4F46E5] border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-sm text-[#9E988E] font-medium font-sans">AI is decomposing your goal... please wait</p>
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-sm text-muted-foreground font-medium font-sans">AI is decomposing your goal... please wait</p>
           </div>
         ) : tasksWithStatus.length === 0 ? (
           <div className="py-12">
@@ -308,20 +303,20 @@ export default function GoalDetail() {
             <section className="lg:col-span-2 flex flex-col gap-6">
               <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center gap-4">
-                  <h3 className="text-[12px] font-medium text-[#9E988E] uppercase tracking-wider font-sans">
+                  <h3 className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider font-sans">
                     Workflow
                   </h3>
                   
                   {/* View Mode Toggle Buttons */}
-                  <div className="flex items-center bg-[#FAF9F7] border border-[#E8E6E1] p-0.5 rounded-lg shadow-sm">
+                  <div className="flex items-center bg-card border border-border p-0.5 rounded-lg shadow-sm">
                     <button
                       type="button"
                       onClick={() => setViewMode('list')}
                       className={cn(
                         "flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all font-sans",
                         viewMode === 'list'
-                          ? "bg-white text-[#4F46E5] shadow-sm border border-[#E8E6E1]/50"
-                          : "text-[#6B6660] hover:text-[#4F46E5]"
+                          ? "bg-card text-primary shadow-sm border border-border/50"
+                          : "text-muted-foreground hover:text-primary"
                       )}
                     >
                       <LayoutGrid className="w-3.5 h-3.5" />
@@ -333,8 +328,8 @@ export default function GoalDetail() {
                       className={cn(
                         "flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all font-sans",
                         viewMode === 'graph'
-                          ? "bg-white text-[#4F46E5] shadow-sm border border-[#E8E6E1]/50"
-                          : "text-[#6B6660] hover:text-[#4F46E5]"
+                          ? "bg-card text-primary shadow-sm border border-border/50"
+                          : "text-muted-foreground hover:text-primary"
                       )}
                     >
                       <Network className="w-3.5 h-3.5" />
@@ -345,7 +340,7 @@ export default function GoalDetail() {
 
                 <button
                   onClick={handleAddManual}
-                  className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#4F46E5] hover:underline font-sans"
+                  className="inline-flex items-center gap-1.5 text-[12px] font-medium text-primary hover:underline font-sans"
                 >
                   <Plus className="w-4 h-4" />
                   Add Task

@@ -103,6 +103,10 @@ export default {
         "glow-vermilion": "0 4px 20px -2px rgba(211, 78, 36, 0.25)",
       },
       keyframes: {
+        breathe: {
+          "0%, 100%": { opacity: "0.55", transform: "scale(0.96)" },
+          "50%": { opacity: "1", transform: "scale(1)" },
+        },
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -129,6 +133,7 @@ export default {
         },
       },
       animation: {
+        breathe: "breathe 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.35s ease-out",

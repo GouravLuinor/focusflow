@@ -119,13 +119,13 @@ export function WorkflowGraph({ tasks, dependencies, onTaskClick, onAddDependenc
     <div className="flex flex-col gap-3 font-sans w-full">
       {/* Informative helper label */}
       {!hasEdges && (
-        <div className="text-[13px] text-[#9E988E] italic bg-[#FAF9F7] border border-[#E8E6E1] px-4 py-2.5 rounded-lg mb-2">
+        <div className="text-[13px] text-muted-foreground italic bg-card border border-border px-4 py-2.5 rounded-lg mb-2">
           💡 Tips: Add dependencies between tasks using the "+" button on each card to build a custom workflow graph.
         </div>
       )}
 
       {/* Outer wrapper to enable horizontal/vertical scrolling if graph overflows */}
-      <div className="w-full overflow-auto border border-[#E8E6E1] bg-[#FCFBF9] rounded-2xl relative shadow-sm">
+      <div className="w-full overflow-auto border border-border bg-card rounded-2xl relative shadow-sm">
         <div
           className="relative"
           style={{ width: `${totalWidth}px`, height: `${totalHeight}px`, minWidth: '100%' }}
@@ -144,7 +144,7 @@ export function WorkflowGraph({ tasks, dependencies, onTaskClick, onAddDependenc
                 refY="3"
                 orient="auto"
               >
-                <polygon points="0 0, 8 3, 0 6" fill="#4F46E5" />
+                <polygon points="0 0, 8 3, 0 6" className="fill-primary" />
               </marker>
               <marker
                 id="arrowhead-completed"
@@ -154,7 +154,7 @@ export function WorkflowGraph({ tasks, dependencies, onTaskClick, onAddDependenc
                 refY="3"
                 orient="auto"
               >
-                <polygon points="0 0, 8 3, 0 6" fill="#9E988E" />
+                <polygon points="0 0, 8 3, 0 6" className="fill-muted-foreground" />
               </marker>
             </defs>
 
@@ -182,11 +182,13 @@ export function WorkflowGraph({ tasks, dependencies, onTaskClick, onAddDependenc
                   key={`${dep.depends_on_task_id}-${dep.task_id}-${idx}`}
                   d={pathData}
                   fill="none"
-                  stroke={isCompleted ? "#9E988E" : "#4F46E5"}
                   strokeWidth={2}
                   strokeDasharray={isBlocked ? "4 4" : undefined}
                   markerEnd={`url(#${isCompleted ? 'arrowhead-completed' : 'arrowhead'})`}
-                  className="transition-all duration-300"
+                  className={cn(
+                    "transition-all duration-300",
+                    isCompleted ? "stroke-muted-foreground" : "stroke-primary"
+                  )}
                 />
               );
             })}
@@ -203,21 +205,21 @@ export function WorkflowGraph({ tasks, dependencies, onTaskClick, onAddDependenc
 
             // Left stripe color
             const stripeColor = isCompleted
-              ? 'bg-[#059669]'
+              ? 'bg-success'
               : isActive
-              ? 'bg-[#4F46E5]'
+              ? 'bg-primary'
               : isBlocked
-              ? 'bg-[#D97706]'
-              : 'bg-[#9E988E]';
+              ? 'bg-accent'
+              : 'bg-muted-foreground';
 
             // Border color
             const borderColorClass = isCompleted
-              ? 'border-[#059669]/30 hover:border-[#059669]/60'
+              ? 'border-success/30 hover:border-success/60'
               : isActive
-              ? 'border-[#4F46E5]/40 hover:border-[#4F46E5]/80'
+              ? 'border-primary/40 hover:border-primary/80'
               : isBlocked
-              ? 'border-[#D97706]/30 hover:border-[#D97706]/60'
-              : 'border-[#E8E6E1] hover:border-[#9E988E]';
+              ? 'border-accent/30 hover:border-accent/60'
+              : 'border-border hover:border-muted-foreground';
 
             return (
               <div
@@ -230,11 +232,11 @@ export function WorkflowGraph({ tasks, dependencies, onTaskClick, onAddDependenc
                   height: `${NODE_HEIGHT}px`,
                 }}
                 className={cn(
-                  "bg-white rounded-xl border overflow-hidden flex transition-all duration-200 shadow-sm cursor-pointer select-none z-10",
+                  "bg-card rounded-xl border overflow-hidden flex transition-all duration-200 shadow-sm cursor-pointer select-none z-10",
                   borderColorClass,
                   isCompleted && "opacity-80 hover:opacity-100",
                   isBlocked && "opacity-75 hover:opacity-100",
-                  isActive && "scale-[1.02] shadow-[0_4px_12px_rgba(79,70,229,0.08)]"
+                  isActive && "scale-[1.02] shadow-[0_4px_12px_hsl(var(--primary)/0.08)]"
                 )}
                 onClick={() => onTaskClick(task.id)}
               >
@@ -248,7 +250,8 @@ export function WorkflowGraph({ tasks, dependencies, onTaskClick, onAddDependenc
                     <button
                       type="button"
                       title="Add dependency"
-                      className="absolute right-2 top-2 p-1 rounded-md text-[#9E988E] hover:text-[#4F46E5] hover:bg-[#4F46E5]/10 transition-colors z-20"
+              aria-label="Add dependency"
+                      className="absolute right-2 top-2 p-1 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors z-20"
                       onClick={(e) => {
                         e.stopPropagation(); // prevent card click / navigate
                         onAddDependency(task.id);
@@ -261,30 +264,30 @@ export function WorkflowGraph({ tasks, dependencies, onTaskClick, onAddDependenc
                   {/* Title */}
                   <h4 className={cn(
                     "text-[13px] font-semibold leading-snug truncate pr-6 font-sans",
-                    isCompleted ? "text-[#6B6660] line-through" : "text-[#1A1A1A]"
+                    isCompleted ? "text-muted-foreground line-through" : "text-foreground"
                   )}>
                     {task.title}
                   </h4>
 
                   {/* Metadata: Status Icon & Time */}
-                  <div className="flex items-center gap-1.5 text-[11px] text-[#9E988E] font-medium font-sans">
+                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium font-sans">
                     {isCompleted && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-[#059669] fill-[#059669] text-white shrink-0" />
+                      <CheckCircle2 className="w-3.5 h-3.5 text-success fill-success text-white shrink-0" />
                     )}
                     {isActive && (
-                      <Play className="w-3.5 h-3.5 text-[#4F46E5] fill-[#4F46E5] text-white shrink-0" />
+                      <Play className="w-3.5 h-3.5 text-primary fill-primary text-white shrink-0" />
                     )}
                     {isBlocked && (
-                      <Lock className="w-3.5 h-3.5 text-[#D97706] shrink-0" />
+                      <Lock className="w-3.5 h-3.5 text-accent shrink-0" />
                     )}
                     {!isCompleted && !isActive && !isBlocked && (
-                      <Circle className="w-3.5 h-3.5 text-[#9E988E] shrink-0" />
+                      <Circle className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                     )}
 
                     <span className="capitalize">{task.status}</span>
                     {task.estimated_minutes !== undefined && task.estimated_minutes !== null && (
                       <>
-                        <span className="text-[#E8E6E1]">•</span>
+                        <span className="text-border">•</span>
                         <span>{task.estimated_minutes} min</span>
                       </>
                     )}

@@ -30,6 +30,7 @@ export function GoalSettings({ goal, status, priority, deadline }: GoalSettingsP
               onClick={() => setShowEdit(true)}
               className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
               title="Edit Goal Details"
+              aria-label="Edit Goal Details"
             >
               <Edit3 className="w-3.5 h-3.5" />
             </button>
@@ -37,6 +38,7 @@ export function GoalSettings({ goal, status, priority, deadline }: GoalSettingsP
               onClick={() => setShowDelete(true)}
               className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
               title="Delete Goal"
+              aria-label="Delete Goal"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>

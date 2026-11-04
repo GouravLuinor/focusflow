@@ -105,6 +105,8 @@ export function AmbientSoundPlayer() {
                 </div>
                 <input
                   type="range"
+                  aria-label="Ambient sound volume"
+                  aria-valuetext={`${volume}%`}
                   min="0"
                   max="100"
                   value={volume}

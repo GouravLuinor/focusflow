@@ -4,7 +4,8 @@ import { ArrowLeft } from 'lucide-react';
 interface GoalHeaderProps {
   title: string;
   progress: number;
-  daysRemaining: number;
+  /** Human deadline label, e.g. "12 days remaining" or "No deadline". */
+  deadlineStatus: string;
   tasksCompleted: number;
   tasksTotal: number;
 }
@@ -12,7 +13,7 @@ interface GoalHeaderProps {
 export function GoalHeader({
   title,
   progress,
-  daysRemaining,
+  deadlineStatus,
   tasksCompleted,
   tasksTotal,
 }: GoalHeaderProps) {
@@ -22,7 +23,7 @@ export function GoalHeader({
       <div className="mb-6">
         <Link
           to="/dashboard"
-          className="inline-flex items-center gap-2 text-[14px] text-[#6B6660] hover:text-[#1A1A1A] transition-colors"
+          className="inline-flex items-center gap-2 text-[14px] text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Dashboard</span>
@@ -30,25 +31,25 @@ export function GoalHeader({
       </div>
 
       {/* Title */}
-      <h1 className="text-[40px] font-semibold text-[#1A1A1A] leading-tight mb-4 tracking-tight">
+      <h1 className="text-[40px] font-semibold text-foreground leading-tight mb-4 tracking-tight">
         {title}
       </h1>
 
       {/* Metadata Row */}
-      <div className="flex flex-wrap items-center gap-2 text-[14px] text-[#6B6660] mb-6">
+      <div className="flex flex-wrap items-center gap-2 text-[14px] text-muted-foreground mb-6">
         <span>{progress}% complete</span>
-        <span className="w-1 h-1 rounded-full bg-[#E8E6E1]" />
-        <span>{daysRemaining} days remaining</span>
-        <span className="w-1 h-1 rounded-full bg-[#E8E6E1]" />
+        <span className="w-1 h-1 rounded-full bg-border" aria-hidden />
+        <span>{deadlineStatus}</span>
+        <span className="w-1 h-1 rounded-full bg-border" aria-hidden />
         <span>
           {tasksCompleted} of {tasksTotal} tasks done
         </span>
       </div>
 
       {/* Progress Bar */}
-      <div className="w-full bg-[#eae6f4] rounded-full h-1.5 overflow-hidden">
+      <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
         <div
-          className="bg-[#4F46E5] h-1.5 rounded-full transition-all duration-500"
+          className="bg-primary h-1.5 rounded-full transition-all duration-500"
           style={{ width: `${progress}%` }}
         ></div>
       </div>

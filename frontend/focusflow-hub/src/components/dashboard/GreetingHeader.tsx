@@ -35,10 +35,10 @@ export function GreetingHeader({ name, availableMinutes, isEmpty = false, onMinu
   if (isEmpty) {
     return (
       <header className="flex flex-col gap-2 mb-8">
-        <h1 className="text-[40px] font-semibold text-[#1b1b24] dark:text-dark-text-primary tracking-tight leading-none">
+        <h1 className="text-[40px] font-semibold text-foreground tracking-tight leading-none">
           Good {timeOfDay}, {firstName}
         </h1>
-        <p className="text-[16px] text-[#9E988E] dark:text-dark-text-secondary leading-normal">
+        <p className="text-[16px] text-muted-foreground leading-normal">
           Here's your empty slate. Let's get things organized.
         </p>
       </header>
@@ -47,30 +47,34 @@ export function GreetingHeader({ name, availableMinutes, isEmpty = false, onMinu
 
   return (
     <div className="mb-8">
-      <h2 className="text-[32px] font-semibold text-[#1A1A1A] dark:text-dark-text-primary tracking-tight mb-1 leading-tight">
+      <h2 className="text-[32px] font-semibold text-foreground tracking-tight mb-1 leading-tight">
         Good {timeOfDay}, {firstName}
       </h2>
-      <div className="text-[16px] text-[#6B6660] dark:text-dark-text-secondary leading-normal flex items-center gap-1.5 flex-wrap">
+      <div className="text-[16px] text-muted-foreground leading-normal flex items-center gap-1.5 flex-wrap">
         <span>You have</span>
         {isEditing ? (
           <div className="flex items-center gap-2">
             <input
               type="number"
+              inputMode="numeric"
+              min={0}
+              max={1440}
+              aria-label="Minutes available today"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              className="w-16 px-1.5 py-0.5 border border-[#4F46E5] dark:border-dark-border rounded bg-white dark:bg-dark-background text-[#1A1A1A] dark:text-dark-text-primary outline-none text-center text-[14px]"
+              className="w-16 px-1.5 py-0.5 border border-primary rounded bg-card text-foreground outline-none text-center text-[14px]"
               onBlur={handleSave}
               onKeyDown={(e) => e.key === 'Enter' && handleSave()}
               autoFocus
             />
-            <span className="text-[12px] text-[#4F46E5] dark:text-[#818cf8] font-semibold cursor-pointer" onClick={handleSave}>
+            <span className="text-[12px] text-primary dark:text-primary font-semibold cursor-pointer" onClick={handleSave}>
               Save
             </span>
           </div>
         ) : (
           <span 
             onClick={() => setIsEditing(true)} 
-            className="font-semibold text-[#4F46E5] dark:text-[#818cf8] underline decoration-dotted cursor-pointer hover:text-[#4338ca] dark:hover:text-indigo-300 transition-colors"
+            className="font-semibold text-primary dark:text-primary underline decoration-dotted cursor-pointer hover:text-primary/90 dark:hover:text-indigo-300 transition-colors"
             title="Click to edit available minutes"
           >
             {availableMinutes} minutes

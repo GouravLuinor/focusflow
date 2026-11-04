@@ -230,7 +230,7 @@ export default function Settings() {
               <h2 className="text-base font-semibold">Visual Ergonomics</h2>
 
               {/* Dyslexia Font Toggle */}
-              <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-xl border border-border/50">
+              <label className="flex items-center justify-between gap-4 p-3 bg-secondary/50 rounded-xl border border-border/50 cursor-pointer hover:bg-secondary transition-colors">
                 <div>
                   <span className="text-xs font-semibold text-foreground block">OpenDyslexic Font</span>
                   <span className="text-[11px] text-muted-foreground">Weighted letterforms to prevent rotation</span>
@@ -239,12 +239,12 @@ export default function Settings() {
                   type="checkbox"
                   checked={dyslexiaFont}
                   onChange={(e) => setDyslexiaFont(e.target.checked)}
-                  className="w-4 h-4 rounded text-primary focus:ring-primary accent-primary cursor-pointer"
+                  className="w-4 h-4 shrink-0 rounded text-primary focus-visible:ring-2 focus-visible:ring-primary accent-primary cursor-pointer"
                 />
-              </div>
+              </label>
 
               {/* Zen Mode Toggle */}
-              <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-xl border border-border/50">
+              <label className="flex items-center justify-between gap-4 p-3 bg-secondary/50 rounded-xl border border-border/50 cursor-pointer hover:bg-secondary transition-colors">
                 <div>
                   <span className="text-xs font-semibold text-foreground block">Zen Mode</span>
                   <span className="text-[11px] text-muted-foreground">Hide ancillary badges and secondary widgets</span>
@@ -253,12 +253,12 @@ export default function Settings() {
                   type="checkbox"
                   checked={zenMode}
                   onChange={(e) => setZenMode(e.target.checked)}
-                  className="w-4 h-4 rounded text-primary focus:ring-primary accent-primary cursor-pointer"
+                  className="w-4 h-4 shrink-0 rounded text-primary focus-visible:ring-2 focus-visible:ring-primary accent-primary cursor-pointer"
                 />
-              </div>
+              </label>
 
               {/* High Contrast Toggle */}
-              <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-xl border border-border/50">
+              <label className="flex items-center justify-between gap-4 p-3 bg-secondary/50 rounded-xl border border-border/50 cursor-pointer hover:bg-secondary transition-colors">
                 <div>
                   <span className="text-xs font-semibold text-foreground block">High Contrast</span>
                   <span className="text-[11px] text-muted-foreground">Maximized edge separation for low vision</span>
@@ -267,9 +267,9 @@ export default function Settings() {
                   type="checkbox"
                   checked={highContrast}
                   onChange={(e) => setHighContrast(e.target.checked)}
-                  className="w-4 h-4 rounded text-primary focus:ring-primary accent-primary cursor-pointer"
+                  className="w-4 h-4 shrink-0 rounded text-primary focus-visible:ring-2 focus-visible:ring-primary accent-primary cursor-pointer"
                 />
-              </div>
+              </label>
 
               {/* Font Size Selector */}
               <div>

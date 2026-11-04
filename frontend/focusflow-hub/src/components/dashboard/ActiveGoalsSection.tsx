@@ -30,21 +30,22 @@ export function ActiveGoalsSection({ goals }: ActiveGoalsSectionProps) {
   return (
     <section>
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-[12px] font-medium text-[#9E988E] uppercase tracking-wider font-sans">
+        <h3 className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider font-sans">
           Active Goals
         </h3>
         <button
           data-testid="create-goal-btn"
           onClick={() => setShowCreateGoal(true)}
-          className="w-6 h-6 rounded-full bg-[#4F46E5]/10 hover:bg-[#4F46E5]/20 text-[#4F46E5] flex items-center justify-center transition-colors"
+          className="w-6 h-6 rounded-full bg-primary/10 hover:bg-primary/20 text-primary flex items-center justify-center transition-colors"
           title="Create New Goal"
+              aria-label="Create New Goal"
         >
           <Plus className="w-3.5 h-3.5" />
         </button>
       </div>
 
       {goals.length === 0 ? (
-        <div className="bg-white rounded-xl border border-[#E8E6E1] p-6 text-center text-[14px] text-[#9E988E] font-sans">
+        <div className="bg-card rounded-xl border border-border p-6 text-center text-[14px] text-muted-foreground font-sans">
           No active goals yet.
         </div>
       ) : (
@@ -64,7 +65,7 @@ export function ActiveGoalsSection({ goals }: ActiveGoalsSectionProps) {
             <div className="flex justify-center mt-2">
               <button
                 onClick={() => setShowAll(!showAll)}
-                className="text-[12px] font-medium text-[#4F46E5] hover:underline opacity-80 hover:opacity-100 transition-opacity font-sans"
+                className="text-[12px] font-medium text-primary hover:underline opacity-80 hover:opacity-100 transition-opacity font-sans"
               >
                 {showAll ? 'Show less' : 'View all goals'}
               </button>

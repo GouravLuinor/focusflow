@@ -35,7 +35,7 @@ export function QuickStats({ completedCount, focusMinutes, dayStreak }: QuickSta
 
   return (
     <section className="mt-auto pt-8">
-      <h3 className="text-[12px] font-medium text-[#9E988E] uppercase tracking-wider mb-4 font-sans">
+      <h3 className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mb-4 font-sans">
         Quick Stats
       </h3>
       <div className="grid grid-cols-3 gap-3">
@@ -45,13 +45,13 @@ export function QuickStats({ completedCount, focusMinutes, dayStreak }: QuickSta
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2, delay: 0.2 + 0.05 * i }}
-            className="bg-white dark:bg-dark-surface rounded-xl border border-[#E8E6E1] dark:border-dark-border p-4 flex flex-col items-center justify-center text-center shadow-sm hover:scale-[1.01] transition-transform duration-200"
+            className="bg-card rounded-xl border border-border p-4 flex flex-col items-center justify-center text-center shadow-sm hover:scale-[1.01] transition-transform duration-200"
           >
-            <stat.icon className="w-5 h-5 text-[#9E988E] dark:text-dark-text-muted mb-2 shrink-0" />
-            <span className="text-[20px] font-semibold text-[#1A1A1A] dark:text-dark-text-primary font-sans leading-tight">
+            <stat.icon className="w-5 h-5 text-muted-foreground mb-2 shrink-0" />
+            <span className="text-[20px] font-semibold text-foreground font-sans leading-tight">
               {stat.value}
             </span>
-            <span className="text-[12px] font-medium text-[#6B6660] dark:text-dark-text-secondary mt-1 font-sans leading-none">
+            <span className="text-[12px] font-medium text-muted-foreground mt-1 font-sans leading-none">
               {stat.label}
             </span>
           </motion.div>

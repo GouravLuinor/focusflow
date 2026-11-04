@@ -171,6 +171,7 @@ export function WorkflowTaskCard({ task, allGoalTasks, goalId }: WorkflowTaskCar
                     onClick={() => handleRemoveDependency(dep.id)}
                     className="hover:text-destructive shrink-0 ml-0.5"
                     title="Remove dependency"
+              aria-label="Remove dependency"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -205,6 +206,7 @@ export function WorkflowTaskCard({ task, allGoalTasks, goalId }: WorkflowTaskCar
               onClick={() => setShowEditTask(true)}
               className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
               title="Edit Task"
+              aria-label="Edit Task"
             >
               <Edit3 className="w-3.5 h-3.5" />
             </button>
@@ -212,6 +214,7 @@ export function WorkflowTaskCard({ task, allGoalTasks, goalId }: WorkflowTaskCar
               onClick={() => setShowDeleteTask(true)}
               className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
               title="Delete Task"
+              aria-label="Delete Task"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
