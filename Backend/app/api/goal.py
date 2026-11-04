@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from app.db.deps import get_db
 from app.core.auth import get_current_user
 from app.models.user import User
-from app.schemas.goal import GoalCreate, GoalUpdate, GoalResponse
+from app.schemas.goal import GoalCreate, GoalUpdate, GoalResponse, GoalStatus
 from app.services import goal_service, dependency_service
-from typing import List
+from typing import List, Optional
 from app.schemas.task import TaskResponse
 from app.schemas.ai_job import AIJobCreate, AIJobResponse
 from app.services import ai_job_service
@@ -24,10 +24,14 @@ def create_goal(
 @router.get("/", response_model=List[GoalResponse])
 @router.get("", response_model=List[GoalResponse])
 def get_goals(
+    goal_status: Optional[GoalStatus] = Query(None, alias="status"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return goal_service.get_goals(db=db, user_id=current_user.id)
+    """List the user's goals, optionally filtered by status (e.g. ?status=ACTIVE)."""
+    return goal_service.get_goals(
+        db=db, user_id=current_user.id, status=goal_status.value if goal_status else None
+    )
 
 @router.get("/{goal_id}", response_model=GoalResponse)
 def get_goal(

@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { useApp } from '@/contexts/AppContext';
 import { apiRequest } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { computeTodayStats, type StatsSession, type StatsTask } from '@/lib/stats';
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { GreetingHeader } from '@/components/dashboard/GreetingHeader';
@@ -91,8 +92,8 @@ export default function Dashboard() {
   const { data: blocksData, isLoading: blocksLoading } = useQuery<ScheduleBlock[]>({
     queryKey: ['schedule', 'blocks'],
     queryFn: async () => {
-      const allBlocks = await apiRequest('/schedule/blocks');
-      return allBlocks.filter((b: any) => ['PLANNED', 'ACTIVE', 'COMPLETED'].includes(b.status));
+      const allBlocks: ScheduleBlock[] = await apiRequest('/schedule/blocks');
+      return allBlocks.filter((b) => ['PLANNED', 'ACTIVE', 'COMPLETED'].includes(b.status));
     },
     retry: 1,
     staleTime: 60 * 1000,
@@ -115,9 +116,17 @@ export default function Dashboard() {
     enabled: isAuthenticated && !!profile,
   });
 
-  const { data: allTasks } = useQuery<any[]>({
+  const { data: allTasks } = useQuery<(StatsTask & { id: number })[]>({
     queryKey: ['tasks', 'all'],
     queryFn: () => apiRequest('/tasks/'),
+    retry: 1,
+    staleTime: 60 * 1000,
+    enabled: isAuthenticated && !!profile,
+  });
+
+  const { data: sessionsData } = useQuery<StatsSession[]>({
+    queryKey: ['sessions', 'all'],
+    queryFn: () => apiRequest('/sessions'),
     retry: 1,
     staleTime: 60 * 1000,
     enabled: isAuthenticated && !!profile,
@@ -130,11 +139,10 @@ export default function Dashboard() {
   }
 
   /* ── Derived state ───────────────────────────────────────── */
-  const completedCount = (executableTasks ?? []).filter((t) => t.is_completed).length;
-  // Calculate total focus time in minutes from blocks or completed tasks
-  const completedBlocks = (blocksData ?? []).filter((b) => b.status === 'COMPLETED');
-  const focusMinutes = completedBlocks.reduce((acc, curr) => acc + (curr.estimated_minutes ?? 45), 0) || (completedCount * 45);
-  const dayStreak = 5; // Default streak to match designs, or fetch from user stats when available
+  const { completedToday, focusMinutesToday, dayStreak } = computeTodayStats(
+    allTasks ?? [],
+    sessionsData ?? []
+  );
 
   const isLoading = profileLoading || scheduleLoading || blocksLoading || goalsLoading || tasksLoading;
   const bestTask = scheduleData?.plan?.[0] ?? null;
@@ -215,6 +223,9 @@ export default function Dashboard() {
 
             {/* Today's Plan Section */}
             <TodaysPlanSection blocks={blocks} tasks={allTasks || []} availableMinutes={availableMinutes} />
+
+            {/* ADHD mode keeps a single column, but goals must stay reachable */}
+            {supportMode === 'adhd' && <ActiveGoalsSection goals={goals} />}
           </div>
 
           {/* RIGHT COLUMN (45% - Hidden in ADHD mode) */}
@@ -225,8 +236,8 @@ export default function Dashboard() {
 
               {/* Quick Stats */}
               <QuickStats
-                completedCount={completedCount}
-                focusMinutes={focusMinutes}
+                completedCount={completedToday}
+                focusMinutes={focusMinutesToday}
                 dayStreak={dayStreak}
               />
             </div>

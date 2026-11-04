@@ -34,7 +34,7 @@ export function StreakHeroCard({
             <span className="text-2xl font-bold text-foreground font-sans">
               {streakDays}
             </span>
-            <span className="text-xs text-muted-foreground">days in flow</span>
+            <span className="text-xs text-muted-foreground">{streakDays === 1 ? 'day' : 'days'} in flow</span>
           </div>
         </div>
       </motion.div>

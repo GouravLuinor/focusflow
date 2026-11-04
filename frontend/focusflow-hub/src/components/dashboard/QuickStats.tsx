@@ -17,12 +17,12 @@ export function QuickStats({ completedCount, focusMinutes, dayStreak }: QuickSta
 
   const stats = [
     {
-      label: 'completed',
+      label: 'done today',
       value: String(completedCount),
       icon: CheckCircle2,
     },
     {
-      label: 'focus time',
+      label: 'focus today',
       value: formatTime(focusMinutes),
       icon: Clock,
     },

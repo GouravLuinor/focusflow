@@ -17,8 +17,11 @@ def create_goal(db: Session, user_id: int, goal_data: GoalCreate) -> Goal:
     db.refresh(db_goal)
     return db_goal
 
-def get_goals(db: Session, user_id: int) -> List[Goal]:
-    return db.query(Goal).filter(Goal.user_id == user_id).all()
+def get_goals(db: Session, user_id: int, status: Optional[str] = None) -> List[Goal]:
+    query = db.query(Goal).filter(Goal.user_id == user_id)
+    if status:
+        query = query.filter(Goal.status == status)
+    return query.order_by(Goal.created_at.desc()).all()
 
 def get_goal(db: Session, goal_id: int, user_id: int) -> Optional[Goal]:
     return db.query(Goal).filter(Goal.id == goal_id, Goal.user_id == user_id).first()

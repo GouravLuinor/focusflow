@@ -8,6 +8,7 @@ import { WeeklyFocusBarChart } from '@/components/insights/WeeklyFocusBarChart';
 import { EstimationAccuracyGauge } from '@/components/insights/EstimationAccuracyGauge';
 import { GoalDistributionDonut } from '@/components/insights/GoalDistributionDonut';
 import { apiRequest } from '@/lib/api';
+import { completedTasksByDay, computeDayStreak, focusSecondsByDay, localDayKey } from '@/lib/stats';
 
 interface Task {
   id: number;
@@ -133,27 +134,24 @@ export default function Insights() {
   const completedTasks = allTasks.filter((t) => t.is_completed);
   const completedSessions = (sessions || []).filter((s) => s.status === 'COMPLETED');
 
-  const totalSeconds = completedSessions.reduce((acc, curr) => acc + (curr.duration_seconds || 0), 0);
+  const focusByDay = focusSecondsByDay(sessions || []);
+  const tasksByDay = completedTasksByDay(allTasks);
+  const totalSeconds = [...focusByDay.values()].reduce((acc, secs) => acc + secs, 0);
   const totalHours = (totalSeconds / 3600).toFixed(1);
   const completionRate = allTasks.length > 0 ? Math.round((completedTasks.length / allTasks.length) * 100) : 0;
-  const streakDays = completedTasks.length > 0 ? Math.min(completedTasks.length, 5) : 0;
+  const streakDays = computeDayStreak(allTasks, sessions || []);
 
   // 1. Weekly Data (Last 7 Days)
   const last7DaysData = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
-    const dateStr = d.toISOString().split('T')[0];
+    const dayKey = localDayKey(d);
     const dayName = d.toLocaleDateString(undefined, { weekday: 'short' });
-    
-    // Sum minutes for this day
-    const daySessions = completedSessions.filter(s => s.started_at && s.started_at.startsWith(dateStr));
-    const minutes = Math.round(daySessions.reduce((sum, s) => sum + (s.duration_seconds || 0), 0) / 60);
-    const dayTasks = completedTasks.filter(t => t.updated_at && t.updated_at.startsWith(dateStr)).length;
 
     return {
       day: dayName,
-      minutes: minutes || (dayTasks * 25), // fallback to task-based estimate if sessions not captured
-      tasks: dayTasks,
+      minutes: Math.round((focusByDay.get(dayKey) ?? 0) / 60),
+      tasks: tasksByDay.get(dayKey) ?? 0,
     };
   });
 
