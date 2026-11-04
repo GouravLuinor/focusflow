@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { apiRequest } from '@/lib/api';
+import { localDayKey } from '@/lib/stats';
 
 interface CreateScheduleBlockDialogProps {
   open: boolean;
@@ -44,7 +45,7 @@ export function CreateScheduleBlockDialog({
       } else {
         setTaskId('');
       }
-      const today = defaultDate || new Date().toISOString().split('T')[0];
+      const today = defaultDate || localDayKey(new Date());
       setDate(today);
       setError(null);
     }

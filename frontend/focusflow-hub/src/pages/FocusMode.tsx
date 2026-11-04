@@ -259,7 +259,7 @@ export default function FocusMode() {
   // Task Completion Celebration Screen
   if (isCompletedState) {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground p-6 text-center font-sans">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background text-foreground p-6 text-center font-sans">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -286,7 +286,7 @@ export default function FocusMode() {
   // Loading State
   if (focusLoading || (execLoading && !taskId)) {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background text-foreground">
         <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin mb-4" />
         <p className="text-xs text-muted-foreground font-medium font-sans animate-pulse">
           Entering calm focus sanctuary...
@@ -298,7 +298,7 @@ export default function FocusMode() {
   // Error State
   if (focusError || !focusData) {
     return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground p-6 text-center font-sans">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background text-foreground p-6 text-center font-sans">
         <div className="w-14 h-14 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-4">
           <AlertCircle className="w-7 h-7" />
         </div>
@@ -328,7 +328,7 @@ export default function FocusMode() {
   })();
 
   return (
-    <div className="h-screen w-screen flex flex-col items-center justify-center relative overflow-hidden bg-background text-foreground font-sans">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-x-hidden bg-background text-foreground font-sans pt-24 pb-12 md:pt-28">
       {/* Top Navigation */}
       <FocusBreadcrumb />
 
@@ -409,7 +409,7 @@ export default function FocusMode() {
               Back to Dashboard
             </button>
           </div>
-        ) : (
+        ) : sessionId ? (
           <FocusActions
             onPauseToggle={handlePauseToggle}
             isPaused={isPaused}
@@ -419,7 +419,7 @@ export default function FocusMode() {
             disabled={!sessionId}
             sessionId={sessionId}
           />
-        )}
+        ) : null}
 
         {/* Subtle Bottom Meta */}
         {focusData.blocking_tasks?.length > 0 && (

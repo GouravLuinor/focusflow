@@ -14,6 +14,7 @@ import { QuickActions } from '@/components/schedule/QuickActions';
 import { ScheduleEmptyState } from '@/components/schedule/ScheduleEmptyState';
 import { CreateScheduleBlockDialog } from '@/components/schedule/CreateScheduleBlockDialog';
 import { apiRequest } from '@/lib/api';
+import { parseServerDate } from '@/lib/stats';
 import { useApp } from '@/contexts/AppContext';
 import { cn } from '@/lib/utils';
 
@@ -34,12 +35,16 @@ interface Task {
   priority: string;
   estimated_minutes: number;
   goal_id?: number | null;
+  deadline?: string | null;
 }
 
 interface Goal {
   id: number;
   title: string;
 }
+
+/** Server timestamps are naive UTC; parse them as UTC so times show in local time. */
+const serverDate = (value: string) => parseServerDate(value) ?? new Date(NaN);
 
 export default function ScheduleView() {
   const navigate = useNavigate();
@@ -64,6 +69,13 @@ export default function ScheduleView() {
   const { data: allGoals, isLoading: goalsLoading } = useQuery<Goal[]>({
     queryKey: ['goals', 'all'],
     queryFn: () => apiRequest('/goals'),
+  });
+
+  // 4. The user's daily focus budget (shared cache with the Dashboard)
+  const { data: profile } = useQuery<{ available_minutes?: number }>({
+    queryKey: ['profile'],
+    queryFn: () => apiRequest('/profile/me'),
+    retry: 1,
   });
 
   const [showCreateBlock, setShowCreateBlock] = useState(false);
@@ -99,8 +111,8 @@ export default function ScheduleView() {
     return (
       <DashboardLayout>
         <div className="max-w-7xl mx-auto px-6 md:px-8 py-8 font-sans flex flex-col items-center justify-center min-h-[50vh]">
-          <div className="w-8 h-8 border-4 border-[#4F46E5] border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-sm text-[#9E988E] font-medium font-sans">Loading schedule timeline...</p>
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-sm text-muted-foreground font-medium font-sans">Loading schedule timeline...</p>
         </div>
       </DashboardLayout>
     );
@@ -111,16 +123,16 @@ export default function ScheduleView() {
     return (
       <DashboardLayout>
         <div className="max-w-7xl mx-auto px-6 md:px-8 py-8 font-sans flex flex-col items-center justify-center min-h-[50vh] text-center">
-          <div className="w-16 h-16 rounded-full bg-[#f0ecf9] flex items-center justify-center text-[#4F46E5] mb-6">
-            <AlertCircle className="w-8 h-8 text-[#D97706]" />
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-primary mb-6">
+            <AlertCircle className="w-8 h-8 text-accent" />
           </div>
-          <h1 className="text-2xl font-semibold mb-2 text-[#1A1A1A]">Unable to Load Schedule</h1>
-          <p className="text-[#6B6660] max-w-sm mb-6">
+          <h1 className="text-2xl font-semibold mb-2 text-foreground">Unable to Load Schedule</h1>
+          <p className="text-muted-foreground max-w-sm mb-6">
             There was a problem communicating with the scheduler backend API.
           </p>
           <button
             onClick={() => navigate('/dashboard')}
-            className="px-6 py-3 bg-[#4F46E5] hover:bg-[#4F46E5]/90 text-white font-medium rounded-lg transition-all"
+            className="px-6 py-3 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-all"
           >
             Back to Dashboard
           </button>
@@ -135,12 +147,12 @@ export default function ScheduleView() {
 
   // Sort schedule blocks by scheduled_start time
   const sortedBlocks = (rawBlocks ?? []).slice().sort((a, b) => {
-    return new Date(a.scheduled_start).getTime() - new Date(b.scheduled_start).getTime();
+    return serverDate(a.scheduled_start).getTime() - serverDate(b.scheduled_start).getTime();
   });
 
   const formatStartTime = (isoString: string) => {
     if (!isoString) return "00:00";
-    const date = new Date(isoString);
+    const date = serverDate(isoString);
     return date.toLocaleTimeString(undefined, {
       hour: '2-digit',
       minute: '2-digit',
@@ -150,8 +162,8 @@ export default function ScheduleView() {
 
   const calculateDuration = (startIso: string, endIso: string) => {
     if (!startIso || !endIso) return "0 min";
-    const start = new Date(startIso);
-    const end = new Date(endIso);
+    const start = serverDate(startIso);
+    const end = serverDate(endIso);
     const diffMs = end.getTime() - start.getTime();
     const diffMins = Math.round(diffMs / (1000 * 60));
     return `${diffMins} min`;
@@ -187,7 +199,7 @@ export default function ScheduleView() {
 
   const blocksByDay = Array.from({ length: 7 }, () => [] as BlockItem[]);
   blockItems.forEach(item => {
-    const date = new Date(item.scheduled_start);
+    const date = serverDate(item.scheduled_start);
     const dayIndex = (date.getDay() + 6) % 7; // Monday is 0, Sunday is 6
     blocksByDay[dayIndex].push(item);
   });
@@ -196,8 +208,8 @@ export default function ScheduleView() {
   const buffers = sortedBlocks.map((block, idx) => {
     if (idx === sortedBlocks.length - 1) return null;
     const nextBlock = sortedBlocks[idx + 1];
-    const currentEnd = new Date(block.scheduled_end).getTime();
-    const nextStart = new Date(nextBlock.scheduled_start).getTime();
+    const currentEnd = serverDate(block.scheduled_end).getTime();
+    const nextStart = serverDate(nextBlock.scheduled_start).getTime();
     const gapMs = nextStart - currentEnd;
     const gapMins = Math.round(gapMs / (1000 * 60));
     if (gapMins > 0) {
@@ -211,10 +223,11 @@ export default function ScheduleView() {
   });
 
   // Calculate scheduler availability metrics
-  const availableMinutes = 90;
+  const availableMinutes =
+    profile?.available_minutes ?? (Number(localStorage.getItem('preferred_daily_minutes')) || 90);
   const scheduledMinutes = sortedBlocks.reduce((acc, block) => {
-    const start = new Date(block.scheduled_start);
-    const end = new Date(block.scheduled_end);
+    const start = serverDate(block.scheduled_start);
+    const end = serverDate(block.scheduled_end);
     const durationMins = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
     return acc + durationMins;
   }, 0);
@@ -251,12 +264,12 @@ export default function ScheduleView() {
           <ScheduleHeader />
 
           {/* View Toggle */}
-          <div className="flex justify-start mb-6 bg-[#eae6f4] p-1.5 rounded-lg w-fit">
+          <div className="flex justify-start mb-6 bg-muted p-1.5 rounded-lg w-fit">
             <button
               onClick={() => setActiveTab('today')}
               className={cn(
                 "px-4 py-2 rounded-md text-[13px] font-medium transition-all font-sans",
-                activeTab === 'today' ? "bg-white text-[#4F46E5] shadow-sm" : "text-[#6B6660] hover:text-[#1A1A1A]"
+                activeTab === 'today' ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
               Today's Plan
@@ -265,7 +278,7 @@ export default function ScheduleView() {
               onClick={() => setActiveTab('week')}
               className={cn(
                 "px-4 py-2 rounded-md text-[13px] font-medium transition-all font-sans",
-                activeTab === 'week' ? "bg-white text-[#4F46E5] shadow-sm" : "text-[#6B6660] hover:text-[#1A1A1A]"
+                activeTab === 'week' ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
               )}
             >
               Week View
@@ -279,12 +292,12 @@ export default function ScheduleView() {
             <div className="lg:col-span-2 flex flex-col gap-8">
               {/* Timeline Container */}
               <div className="flex flex-col gap-4">
-                <h3 className="text-[20px] font-medium text-[#1A1A1A]">
+                <h3 className="text-[20px] font-medium text-foreground">
                   Today's Timeline
                 </h3>
                 <div className="flex flex-col relative pl-6">
                   {/* Vertical Timeline Line */}
-                  <div className="absolute left-[11px] top-4 bottom-4 w-px bg-[#E8E6E1] z-0"></div>
+                  <div className="absolute left-[11px] top-4 bottom-4 w-px bg-border z-0"></div>
 
                   {blockItems.map((block, i) => (
                     <div key={block.id}>
@@ -303,7 +316,15 @@ export default function ScheduleView() {
               </div>
 
               {/* Why This Plan Explainer Grid */}
-              <WhyThisPlan />
+              <WhyThisPlan
+                sessionCount={sortedBlocks.length}
+                scheduledMinutes={scheduledMinutes}
+                availableMinutes={availableMinutes}
+                plannedTasks={sortedBlocks.flatMap((b) => {
+                  const task = b.task_id ? taskMap.get(b.task_id) : undefined;
+                  return task ? [task] : [];
+                })}
+              />
             </div>
 
             {/* Right Column (1/3): WeekOverview + QuickActions */}
@@ -333,16 +354,16 @@ export default function ScheduleView() {
                   <div 
                     key={dayName} 
                     className={cn(
-                      "bg-white border rounded-xl p-5 flex flex-col gap-4 shadow-sm transition-all duration-200",
-                      isToday ? "border-[#4F46E5] ring-2 ring-[#4F46E5]/10" : "border-[#E8E6E1]"
+                      "bg-card border rounded-xl p-5 flex flex-col gap-4 shadow-sm transition-all duration-200",
+                      isToday ? "border-primary ring-2 ring-primary/10" : "border-border"
                     )}
                   >
-                    <div className="flex justify-between items-center pb-2 border-b border-[#E8E6E1]/50">
-                      <h4 className={cn("text-[16px] font-semibold", isToday ? "text-[#4F46E5]" : "text-[#1A1A1A]")}>
+                    <div className="flex justify-between items-center pb-2 border-b border-border/50">
+                      <h4 className={cn("text-[16px] font-semibold", isToday ? "text-primary" : "text-foreground")}>
                         {dayName}
                       </h4>
                       {isToday && (
-                        <span className="bg-[#4F46E5]/10 text-[#4F46E5] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
                           Today
                         </span>
                       )}
@@ -350,24 +371,24 @@ export default function ScheduleView() {
                     
                     <div className="flex flex-col gap-3 flex-1">
                       {dayBlocks.length === 0 ? (
-                        <div className="text-[12px] text-[#9E988E] py-4 text-center">
+                        <div className="text-[12px] text-muted-foreground py-4 text-center">
                           No tasks scheduled
                         </div>
                       ) : (
                         dayBlocks.map(block => (
                           <div 
                             key={block.id} 
-                            className="p-3 border border-[#E8E6E1] rounded-lg bg-[#FAF9F7] flex flex-col gap-1 hover:border-[#4F46E5]/50 transition-colors"
+                            className="p-3 border border-border rounded-lg bg-card flex flex-col gap-1 hover:border-primary/50 transition-colors"
                           >
                             <div className="flex justify-between items-start gap-2">
-                              <span className="text-[13px] font-semibold text-[#1A1A1A] line-clamp-2">
+                              <span className="text-[13px] font-semibold text-foreground line-clamp-2">
                                 {block.title}
                               </span>
-                              <span className="text-[10px] text-[#6B6660] bg-white border border-[#E8E6E1] px-1.5 py-0.5 rounded shrink-0">
+                              <span className="text-[10px] text-muted-foreground bg-card border border-border px-1.5 py-0.5 rounded shrink-0">
                                 {block.time}
                               </span>
                             </div>
-                            <div className="flex justify-between items-center text-[11px] text-[#6B6660] mt-1">
+                            <div className="flex justify-between items-center text-[11px] text-muted-foreground mt-1">
                               <span>{block.goal}</span>
                               <span>{block.duration}</span>
                             </div>

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  computePatternInsights,
   computeDayStreak,
   computeTodayStats,
   localDayKey,
@@ -79,5 +80,36 @@ describe("computeTodayStats", () => {
 describe("localDayKey", () => {
   it("formats in local time", () => {
     expect(localDayKey(new Date(2026, 0, 5, 23, 59))).toBe("2026-01-05");
+  });
+});
+
+describe("computePatternInsights", () => {
+  it("states nothing without enough data", () => {
+    expect(computePatternInsights([], [])).toEqual([]);
+  });
+
+  it("reports the part of day with the most focus time", () => {
+    const at = (h: number) => new Date(2026, 10, 3, h, 0).toISOString();
+    const sessions = [
+      { status: "COMPLETED", started_at: at(9), duration_seconds: 1800 },
+      { status: "COMPLETED", started_at: at(10), duration_seconds: 1800 },
+      { status: "ABANDONED", started_at: at(20), duration_seconds: 1200 },
+    ];
+    expect(computePatternInsights([], sessions)).toEqual([
+      { title: "When you focus", body: "75% of your focus time happens in the morning." },
+    ]);
+  });
+
+  it("compares completion of stepped vs unstepped tasks", () => {
+    const steps = [1, 2, 3];
+    const tasks = [
+      { is_completed: true, steps },
+      { is_completed: true, steps },
+      { is_completed: true, steps: [] },
+      { is_completed: false, steps: [] },
+    ];
+    expect(computePatternInsights(tasks, [])[0].body).toBe(
+      "Tasks with 3+ steps: 100% done. Tasks with fewer steps: 50% done.",
+    );
   });
 });

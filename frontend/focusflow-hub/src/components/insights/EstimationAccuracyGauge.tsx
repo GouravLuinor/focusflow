@@ -49,7 +49,7 @@ export function EstimationAccuracyGauge({
               </span>
             )}
             <p className="text-muted-foreground mt-0.5">
-              Based on {tasksAnalyzed} completed task sessions
+              Based on {tasksAnalyzed} completed {tasksAnalyzed === 1 ? 'task' : 'tasks'}
             </p>
           </div>
         </div>

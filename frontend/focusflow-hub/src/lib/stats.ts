@@ -124,3 +124,69 @@ export function computeTodayStats(
     dayStreak: computeDayStreak(tasks, sessions, now),
   };
 }
+
+export interface PatternInsight {
+  title: string;
+  body: string;
+}
+
+const DAY_PARTS: { name: string; from: number; to: number }[] = [
+  { name: "morning", from: 5, to: 12 },
+  { name: "afternoon", from: 12, to: 17 },
+  { name: "evening", from: 17, to: 22 },
+];
+
+function dayPart(hour: number): string {
+  return DAY_PARTS.find((p) => hour >= p.from && hour < p.to)?.name ?? "late night";
+}
+
+/** Minimum sample sizes before a pattern is worth stating. */
+const MIN_SESSIONS_FOR_TIME_PATTERN = 3;
+const MIN_TASKS_PER_STEP_GROUP = 2;
+
+/**
+ * Observations derived only from the user's own data. Each one appears only
+ * once there is enough data behind it, so nothing is invented.
+ */
+export function computePatternInsights(
+  tasks: (StatsTask & { steps?: unknown[] | null })[],
+  sessions: StatsSession[],
+): PatternInsight[] {
+  const insights: PatternInsight[] = [];
+
+  const worked = sessions.filter(
+    (s) => WORKED_SESSION_STATUSES.has(s.status) && (s.duration_seconds ?? 0) > 0,
+  );
+  if (worked.length >= MIN_SESSIONS_FOR_TIME_PATTERN) {
+    const byPart = new Map<string, number>();
+    let total = 0;
+    for (const s of worked) {
+      const start = parseServerDate(s.started_at);
+      if (!start) continue;
+      const secs = s.duration_seconds ?? 0;
+      const part = dayPart(start.getHours());
+      byPart.set(part, (byPart.get(part) ?? 0) + secs);
+      total += secs;
+    }
+    const [topPart, topSecs] = [...byPart.entries()].sort((a, b) => b[1] - a[1])[0] ?? [];
+    if (topPart && total > 0) {
+      insights.push({
+        title: "When you focus",
+        body: `${Math.round((topSecs / total) * 100)}% of your focus time happens in the ${topPart}.`,
+      });
+    }
+  }
+
+  const withSteps = tasks.filter((t) => (t.steps?.length ?? 0) >= 3);
+  const withoutSteps = tasks.filter((t) => (t.steps?.length ?? 0) < 3);
+  if (withSteps.length >= MIN_TASKS_PER_STEP_GROUP && withoutSteps.length >= MIN_TASKS_PER_STEP_GROUP) {
+    const rate = (group: StatsTask[]) =>
+      Math.round((group.filter((t) => t.is_completed).length / group.length) * 100);
+    insights.push({
+      title: "Breaking tasks down",
+      body: `Tasks with 3+ steps: ${rate(withSteps)}% done. Tasks with fewer steps: ${rate(withoutSteps)}% done.`,
+    });
+  }
+
+  return insights;
+}

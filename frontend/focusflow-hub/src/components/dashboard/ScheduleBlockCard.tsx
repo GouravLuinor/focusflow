@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, BookOpen, Database, Code, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/api';
 import { useApp } from '@/contexts/AppContext';
+import { localDayKey, parseServerDate } from '@/lib/stats';
 
 export type BlockStatus = 'PLANNED' | 'ACTIVE' | 'COMPLETED' | 'MISSED' | 'RESCHEDULED';
 
@@ -37,12 +38,18 @@ function getTaskIcon(title: string) {
   return ClipboardList;
 }
 
-function formatTime(iso: string): string {
-  try {
-    return format(parseISO(iso), 'HH:mm');
-  } catch {
-    return '00:00';
-  }
+function formatTime(value: string): string {
+  const date = parseServerDate(value);
+  return date ? format(date, 'HH:mm') : '--:--';
+}
+
+function blockMinutes(block: ScheduleBlock): number | null {
+  if (block.estimated_minutes) return block.estimated_minutes;
+  const start = parseServerDate(block.scheduled_start);
+  const end = parseServerDate(block.scheduled_end);
+  if (!start || !end) return null;
+  const minutes = Math.round((end.getTime() - start.getTime()) / 60000);
+  return minutes > 0 ? minutes : null;
 }
 
 export function ScheduleBlockCard({ block }: ScheduleBlockCardProps) {
@@ -62,7 +69,7 @@ export function ScheduleBlockCard({ block }: ScheduleBlockCardProps) {
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localDayKey(new Date());
   const nowPlusOne = new Date(Date.now() + 60 * 60 * 1000);
   const hourStr = String(nowPlusOne.getHours()).padStart(2, '0');
   const minStr = String(nowPlusOne.getMinutes()).padStart(2, '0');
@@ -75,8 +82,8 @@ export function ScheduleBlockCard({ block }: ScheduleBlockCardProps) {
   const isActive = block.status === 'ACTIVE';
 
   const timeLabel = formatTime(block.scheduled_start);
-  const taskTitle = block.task_title ?? `Task #${block.task_id}`;
-  const duration = block.estimated_minutes ?? 45;
+  const taskTitle = block.task_title ?? 'Untitled task';
+  const duration = blockMinutes(block);
   const TaskIcon = getTaskIcon(taskTitle);
 
   const handleSkip = async () => {
@@ -109,9 +116,7 @@ export function ScheduleBlockCard({ block }: ScheduleBlockCardProps) {
     setIsLoading(true);
     try {
       const startDateTime = new Date(`${rescheduleDate}T${rescheduleTime}:00`);
-      const originalStart = new Date(block.scheduled_start);
-      const originalEnd = new Date(block.scheduled_end);
-      const durationMs = originalEnd.getTime() - originalStart.getTime();
+      const durationMs = (blockMinutes(block) ?? 30) * 60000;
       const endDateTime = new Date(startDateTime.getTime() + durationMs);
 
       await apiRequest(`/schedule/blocks/${block.id}`, {
@@ -138,9 +143,9 @@ export function ScheduleBlockCard({ block }: ScheduleBlockCardProps) {
 
   if (isCompleted) {
     return (
-      <div className="bg-card rounded-2xl border border-border flex opacity-70 hover:opacity-100 transition-opacity font-sans shadow-soft">
+      <div className="bg-card rounded-2xl border border-border flex overflow-hidden opacity-70 hover:opacity-100 transition-opacity font-sans shadow-soft">
         <div className="w-1.5 bg-success shrink-0" />
-        <div className="p-4 flex-1 flex items-center gap-3">
+        <div className="p-4 flex-1 min-w-0 flex items-center gap-3">
           <div className="w-12 text-xs text-muted-foreground text-right shrink-0 font-sans">
             {timeLabel}
           </div>
@@ -153,7 +158,7 @@ export function ScheduleBlockCard({ block }: ScheduleBlockCardProps) {
             </p>
           </div>
           <div className="text-xs text-muted-foreground shrink-0 font-sans">
-            {duration}m
+            {duration !== null && `${duration}m`}
           </div>
         </div>
       </div>
@@ -162,7 +167,7 @@ export function ScheduleBlockCard({ block }: ScheduleBlockCardProps) {
 
   return (
     <div className={cn(
-      "bg-card rounded-2xl border border-border flex flex-col transition-all font-sans shadow-soft",
+      "bg-card rounded-2xl border border-border flex flex-col overflow-hidden transition-all font-sans shadow-soft",
       isActive && "border-primary/50 shadow-medium"
     )}>
       <div className="flex items-center">
@@ -170,7 +175,7 @@ export function ScheduleBlockCard({ block }: ScheduleBlockCardProps) {
           "w-1.5 self-stretch shrink-0",
           isActive ? "bg-primary" : "bg-border"
         )} />
-        <div className="p-4 flex-1 flex items-center gap-3">
+        <div className="p-4 flex-1 min-w-0 flex items-center gap-3">
           <div className={cn(
             "w-12 text-xs text-right shrink-0 font-sans",
             isActive ? "text-primary font-medium" : "text-muted-foreground"
@@ -217,7 +222,7 @@ export function ScheduleBlockCard({ block }: ScheduleBlockCardProps) {
                 <button
                   onClick={handleSkip}
                   disabled={isLoading}
-                  className="text-accent hover:underline"
+                  className="text-muted-foreground hover:text-foreground hover:underline"
                 >
                   Skip
                 </button>
@@ -228,7 +233,7 @@ export function ScheduleBlockCard({ block }: ScheduleBlockCardProps) {
             "text-xs shrink-0 font-sans",
             isActive ? "text-primary font-medium" : "text-muted-foreground"
           )}>
-            {duration}m
+            {duration !== null && `${duration}m`}
           </div>
         </div>
       </div>
@@ -240,6 +245,7 @@ export function ScheduleBlockCard({ block }: ScheduleBlockCardProps) {
               <label className="text-[10px] font-medium text-muted-foreground">Date</label>
               <input
                 type="date"
+                aria-label="Reschedule date"
                 required
                 value={rescheduleDate}
                 onChange={(e) => setRescheduleDate(e.target.value)}
@@ -250,6 +256,7 @@ export function ScheduleBlockCard({ block }: ScheduleBlockCardProps) {
               <label className="text-[10px] font-medium text-muted-foreground">Time</label>
               <input
                 type="time"
+                aria-label="Reschedule time"
                 required
                 value={rescheduleTime}
                 onChange={(e) => setRescheduleTime(e.target.value)}

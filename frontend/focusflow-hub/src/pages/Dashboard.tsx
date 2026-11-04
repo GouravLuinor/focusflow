@@ -40,11 +40,11 @@ interface ExecutableTask {
 
 function CardSkeleton({ className = '' }: { className?: string }) {
   return (
-    <div className={`bg-white rounded-xl border border-[#E8E6E1] animate-pulse ${className}`}>
+    <div className={`bg-card rounded-xl border border-border animate-pulse ${className}`}>
       <div className="p-5 space-y-3">
-        <div className="h-4 bg-[#f0ecf9] rounded w-2/3" />
-        <div className="h-3 bg-[#f0ecf9] rounded w-1/2" />
-        <div className="h-3 bg-[#f0ecf9] rounded w-3/4" />
+        <div className="h-4 bg-muted rounded w-2/3" />
+        <div className="h-3 bg-muted rounded w-1/2" />
+        <div className="h-3 bg-muted rounded w-3/4" />
       </div>
     </div>
   );
@@ -116,7 +116,7 @@ export default function Dashboard() {
     enabled: isAuthenticated && !!profile,
   });
 
-  const { data: allTasks } = useQuery<(StatsTask & { id: number })[]>({
+  const { data: allTasks } = useQuery<(StatsTask & { id: number; title: string; postponement_count: number; goal_id?: number | null })[]>({
     queryKey: ['tasks', 'all'],
     queryFn: () => apiRequest('/tasks/'),
     retry: 1,
@@ -161,8 +161,8 @@ export default function Dashboard() {
       <DashboardLayout>
         <div className="pt-8 pb-12 px-8 max-w-[1600px] mx-auto min-h-screen">
           <div className="max-w-[1080px] mx-auto mb-8">
-            <div className="h-10 bg-[#f0ecf9] animate-pulse rounded w-1/4 mb-2" />
-            <div className="h-6 bg-[#f0ecf9] animate-pulse rounded w-1/3" />
+            <div className="h-10 bg-muted animate-pulse rounded w-1/4 mb-2" />
+            <div className="h-6 bg-muted animate-pulse rounded w-1/3" />
           </div>
           <div className="max-w-[1080px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-7 flex flex-col gap-8">
@@ -216,7 +216,7 @@ export default function Dashboard() {
             {bestTask ? (
               <NextBestActionCard task={bestTask} />
             ) : (
-              <div className="bg-white rounded-xl border border-[#E8E6E1] p-6 text-center text-[14px] text-[#9E988E] font-sans">
+              <div className="bg-card rounded-xl border border-border p-6 text-center text-[14px] text-muted-foreground font-sans">
                 All caught up! No tasks ready to start right now.
               </div>
             )}

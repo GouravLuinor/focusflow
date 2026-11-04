@@ -8,7 +8,7 @@ import { WeeklyFocusBarChart } from '@/components/insights/WeeklyFocusBarChart';
 import { EstimationAccuracyGauge } from '@/components/insights/EstimationAccuracyGauge';
 import { GoalDistributionDonut } from '@/components/insights/GoalDistributionDonut';
 import { apiRequest } from '@/lib/api';
-import { completedTasksByDay, computeDayStreak, focusSecondsByDay, localDayKey } from '@/lib/stats';
+import { completedTasksByDay, computeDayStreak, computePatternInsights, focusSecondsByDay, localDayKey } from '@/lib/stats';
 
 interface Task {
   id: number;
@@ -19,6 +19,7 @@ interface Task {
   actual_minutes?: number | null;
   created_at: string;
   updated_at: string;
+  steps?: { id: number }[];
 }
 
 interface ExecutionSession {
@@ -140,6 +141,7 @@ export default function Insights() {
   const totalHours = (totalSeconds / 3600).toFixed(1);
   const completionRate = allTasks.length > 0 ? Math.round((completedTasks.length / allTasks.length) * 100) : 0;
   const streakDays = computeDayStreak(allTasks, sessions || []);
+  const patternInsights = computePatternInsights(allTasks, sessions || []);
 
   // 1. Weekly Data (Last 7 Days)
   const last7DaysData = Array.from({ length: 7 }).map((_, i) => {
@@ -205,7 +207,7 @@ export default function Insights() {
               Focus Insights & Analytics
             </h1>
             <p className="text-xs text-muted-foreground mt-1">
-              Neuro-calm telemetry tracking execution rhythm and time calibration
+              How your focus time and estimates have been going
             </p>
           </div>
         </div>
@@ -243,26 +245,31 @@ export default function Insights() {
           <div className="lg:col-span-6 bg-card border border-border rounded-2xl p-6 shadow-soft flex flex-col justify-between">
             <div>
               <h3 className="text-base font-semibold text-foreground mb-1">
-                Executive Function Momentum
+                Your patterns
               </h3>
               <p className="text-xs text-muted-foreground mb-4">
-                Personalized observations based on your recent work patterns
+                Observations drawn from your own tasks and focus sessions
               </p>
-              <div className="space-y-3 text-xs text-foreground/90 leading-relaxed">
-                <p className="p-3 bg-secondary/50 rounded-xl border border-border/50">
-                  🎋 <strong className="text-foreground">Peak Performance Window:</strong> You consistently achieve the highest task completion during your first 2 scheduled daily blocks.
+              {patternInsights.length > 0 ? (
+                <ul className="space-y-3 text-xs text-foreground/90 leading-relaxed">
+                  {patternInsights.map((insight) => (
+                    <li key={insight.title} className="p-3 bg-secondary/50 rounded-xl border border-border/50">
+                      <strong className="text-foreground">{insight.title}:</strong> {insight.body}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="p-3 bg-secondary/50 rounded-xl border border-border/50 text-xs text-muted-foreground leading-relaxed">
+                  Patterns show up here after a few focus sessions. There's nothing to do in the meantime.
                 </p>
-                <p className="p-3 bg-secondary/50 rounded-xl border border-border/50">
-                  🎯 <strong className="text-foreground">Step Decomposition Impact:</strong> Tasks with 3+ micro-steps show a <strong className="text-success">92% completion rate</strong> compared to 64% for undivided tasks.
-                </p>
-              </div>
+              )}
             </div>
             <div className="pt-4 border-t border-border/50 flex justify-end">
               <button
                 onClick={() => navigate('/schedule')}
                 className="text-xs font-medium text-primary hover:underline"
               >
-                Optimize Next Week's Schedule →
+                Open schedule →
               </button>
             </div>
           </div>

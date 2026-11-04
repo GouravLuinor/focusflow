@@ -7,9 +7,16 @@ import { PostponementNudge } from './PostponementNudge';
 import { useApp } from '@/contexts/AppContext';
 import { apiRequest } from '@/lib/api';
 
+interface PlanTask {
+  id: number;
+  title: string;
+  postponement_count: number;
+  goal_id?: number | null;
+}
+
 interface TodaysPlanSectionProps {
   blocks: ScheduleBlock[];
-  tasks?: any[];
+  tasks?: PlanTask[];
   availableMinutes?: number;
 }
 
@@ -62,6 +69,8 @@ export function TodaysPlanSection({ blocks, tasks = [], availableMinutes }: Toda
     ? blocks.slice(0, 3) 
     : (showAll ? blocks : blocks.slice(0, 5));
 
+  const titleById = new Map(tasks.map((t) => [t.id, t.title]));
+
   // Find most postponed task
   const nudgeTask = tasks
     .filter((t) => t.postponement_count >= 2 && !dismissedTaskIds.includes(t.id))
@@ -70,7 +79,7 @@ export function TodaysPlanSection({ blocks, tasks = [], availableMinutes }: Toda
   return (
     <section>
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-[20px] font-medium text-[#1A1A1A] dark:text-dark-text-primary font-sans">
+        <h3 className="text-[20px] font-medium text-foreground font-sans">
           Today
         </h3>
         <div className="flex items-center gap-3">
@@ -78,14 +87,14 @@ export function TodaysPlanSection({ blocks, tasks = [], availableMinutes }: Toda
             <button
               onClick={handleGeneratePlan}
               disabled={isGenerating}
-              className="text-[12px] font-medium text-[#4F46E5] hover:underline font-sans disabled:opacity-50"
+              className="text-[12px] font-medium text-primary hover:underline font-sans disabled:opacity-50"
             >
               {isGenerating ? 'Regenerating...' : 'Regenerate Plan'}
             </button>
           )}
           <button 
             onClick={() => navigate('/schedule')}
-            className="text-[12px] font-medium text-[#4F46E5] hover:underline font-sans"
+            className="text-[12px] font-medium text-primary hover:underline font-sans"
           >
             Edit plan
           </button>
@@ -100,14 +109,14 @@ export function TodaysPlanSection({ blocks, tasks = [], availableMinutes }: Toda
       )}
 
       {blocks.length === 0 ? (
-        <div className="bg-white dark:bg-dark-surface border border-[#E8E6E1] dark:border-dark-border rounded-xl p-8 text-center flex flex-col items-center gap-4 shadow-sm">
-          <p className="text-[14px] text-[#9E988E] dark:text-dark-text-secondary font-sans">
+        <div className="bg-card border border-border rounded-xl p-8 text-center flex flex-col items-center gap-4 shadow-sm">
+          <p className="text-[14px] text-muted-foreground font-sans">
             No sessions planned yet — generate a plan to get started.
           </p>
           <button
             onClick={handleGeneratePlan}
             disabled={isGenerating}
-            className="bg-[#4F46E5] hover:bg-[#4338ca] text-white text-[14px] font-medium py-2.5 px-6 rounded-lg transition-colors flex items-center gap-2 shadow-[0_4px_14px_0_rgba(79,70,229,0.3)] disabled:opacity-50"
+            className="bg-primary hover:bg-primary/90 text-white text-[14px] font-medium py-2.5 px-6 rounded-lg transition-colors flex items-center gap-2 shadow-[0_4px_14px_0_hsl(var(--primary)/0.3)] disabled:opacity-50"
           >
             {isGenerating ? (
               <>
@@ -128,7 +137,7 @@ export function TodaysPlanSection({ blocks, tasks = [], availableMinutes }: Toda
         >
           {displayBlocks.map((block) => (
             <motion.div key={block.id} variants={itemVariants}>
-              <ScheduleBlockCard block={block} />
+              <ScheduleBlockCard block={{ ...block, task_title: block.task_title ?? titleById.get(block.task_id) }} />
             </motion.div>
           ))}
         </motion.div>
@@ -138,7 +147,7 @@ export function TodaysPlanSection({ blocks, tasks = [], availableMinutes }: Toda
         <div className="flex justify-center mt-4">
           <button
             onClick={() => setShowAll(!showAll)}
-            className="text-[12px] font-medium text-[#4F46E5] hover:underline transition-opacity font-sans"
+            className="text-[12px] font-medium text-primary hover:underline transition-opacity font-sans"
           >
             {showAll ? 'Show less' : `View all tasks (${blocks.length})`}
           </button>
