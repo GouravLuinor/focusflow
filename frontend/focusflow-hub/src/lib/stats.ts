@@ -190,3 +190,65 @@ export function computePatternInsights(
 
   return insights;
 }
+
+export interface CalibrationTask {
+  id: number;
+  is_completed: boolean;
+  estimated_minutes?: number | null;
+  actual_minutes?: number | null;
+}
+
+export interface CalibrationSession {
+  task_id: number;
+  status: string;
+  duration_seconds?: number | null;
+}
+
+export interface EstimationCalibration {
+  /** actual / planned across measured tasks; null when nothing has been measured yet. */
+  ratio: number | null;
+  averageEstimateMinutes: number | null;
+  averageActualMinutes: number | null;
+  tasksAnalyzed: number;
+}
+
+/**
+ * Compare planned vs actual time for completed tasks.
+ *
+ * Only tasks with a real estimate AND real measured time count: completed focus
+ * sessions, or a recorded actual_minutes. Unmeasured tasks are skipped rather than
+ * assumed accurate, so an empty history reports "no data" instead of 100%.
+ */
+export function computeEstimationCalibration(
+  tasks: CalibrationTask[],
+  sessions: CalibrationSession[],
+): EstimationCalibration {
+  const secondsByTask = new Map<number, number>();
+  for (const s of sessions) {
+    if (s.status !== "COMPLETED" || !s.duration_seconds) continue;
+    secondsByTask.set(s.task_id, (secondsByTask.get(s.task_id) ?? 0) + s.duration_seconds);
+  }
+
+  let totalEstimate = 0;
+  let totalActual = 0;
+  let count = 0;
+  for (const task of tasks) {
+    if (!task.is_completed || !task.estimated_minutes || task.estimated_minutes <= 0) continue;
+    const sessionSeconds = secondsByTask.get(task.id);
+    const actual = sessionSeconds ? sessionSeconds / 60 : task.actual_minutes;
+    if (!actual || actual <= 0) continue;
+    totalEstimate += task.estimated_minutes;
+    totalActual += actual;
+    count++;
+  }
+
+  if (count === 0) {
+    return { ratio: null, averageEstimateMinutes: null, averageActualMinutes: null, tasksAnalyzed: 0 };
+  }
+  return {
+    ratio: totalActual / totalEstimate,
+    averageEstimateMinutes: Math.round(totalEstimate / count),
+    averageActualMinutes: Math.round(totalActual / count),
+    tasksAnalyzed: count,
+  };
+}

@@ -8,7 +8,7 @@ import { WeeklyFocusBarChart } from '@/components/insights/WeeklyFocusBarChart';
 import { EstimationAccuracyGauge } from '@/components/insights/EstimationAccuracyGauge';
 import { GoalDistributionDonut } from '@/components/insights/GoalDistributionDonut';
 import { apiRequest } from '@/lib/api';
-import { completedTasksByDay, computeDayStreak, computePatternInsights, focusSecondsByDay, localDayKey } from '@/lib/stats';
+import { completedTasksByDay, computeDayStreak, computeEstimationCalibration, computePatternInsights, focusSecondsByDay, localDayKey } from '@/lib/stats';
 
 interface Task {
   id: number;
@@ -133,7 +133,6 @@ export default function Insights() {
   // --- Metrics Computation ---
   const allTasks = tasks || [];
   const completedTasks = allTasks.filter((t) => t.is_completed);
-  const completedSessions = (sessions || []).filter((s) => s.status === 'COMPLETED');
 
   const focusByDay = focusSecondsByDay(sessions || []);
   const tasksByDay = completedTasksByDay(allTasks);
@@ -157,26 +156,8 @@ export default function Insights() {
     };
   });
 
-  // 2. Estimation Accuracy
-  let totalEstimate = 0;
-  let totalActual = 0;
-  let accurateTasksCount = 0;
-
-  completedTasks.forEach((task) => {
-    const est = task.estimated_minutes || 25;
-    const taskSessions = completedSessions.filter((s) => s.task_id === task.id);
-    const act = taskSessions.length > 0
-      ? taskSessions.reduce((sum, s) => sum + (s.duration_seconds || 0), 0) / 60
-      : (task.actual_minutes || est);
-
-    totalEstimate += est;
-    totalActual += act;
-    accurateTasksCount++;
-  });
-
-  const accuracyRatio = totalEstimate > 0 ? totalActual / totalEstimate : 1.0;
-  const avgEstimate = accurateTasksCount > 0 ? Math.round(totalEstimate / accurateTasksCount) : 25;
-  const avgActual = accurateTasksCount > 0 ? Math.round(totalActual / accurateTasksCount) : 25;
+  // 2. Estimation Accuracy (measured tasks only)
+  const calibration = computeEstimationCalibration(allTasks, sessions || []);
 
   // 3. Goal Distribution
   const goalColors = [
@@ -226,12 +207,7 @@ export default function Insights() {
             <WeeklyFocusBarChart data={last7DaysData} />
           </div>
           <div className="lg:col-span-5">
-            <EstimationAccuracyGauge
-              ratio={accuracyRatio}
-              averageEstimateMinutes={avgEstimate}
-              averageActualMinutes={avgActual}
-              tasksAnalyzed={accurateTasksCount}
-            />
+            <EstimationAccuracyGauge {...calibration} />
           </div>
         </div>
 

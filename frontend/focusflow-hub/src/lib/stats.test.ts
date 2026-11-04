@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   computePatternInsights,
   computeDayStreak,
+  computeEstimationCalibration,
   computeTodayStats,
   localDayKey,
   parseServerDate,
@@ -111,5 +112,60 @@ describe("computePatternInsights", () => {
     expect(computePatternInsights(tasks, [])[0].body).toBe(
       "Tasks with 3+ steps: 100% done. Tasks with fewer steps: 50% done.",
     );
+  });
+});
+
+describe("computeEstimationCalibration", () => {
+  it("reports no data instead of 100% when nothing is completed", () => {
+    expect(computeEstimationCalibration([], [])).toEqual({
+      ratio: null,
+      averageEstimateMinutes: null,
+      averageActualMinutes: null,
+      tasksAnalyzed: 0,
+    });
+  });
+
+  it("skips completed tasks with no measured time instead of assuming they were accurate", () => {
+    const result = computeEstimationCalibration(
+      [{ id: 1, is_completed: true, estimated_minutes: 30 }],
+      [],
+    );
+    expect(result.ratio).toBeNull();
+    expect(result.tasksAnalyzed).toBe(0);
+  });
+
+  it("skips tasks without an estimate and incomplete tasks", () => {
+    const result = computeEstimationCalibration(
+      [
+        { id: 1, is_completed: true, estimated_minutes: null, actual_minutes: 40 },
+        { id: 2, is_completed: false, estimated_minutes: 30, actual_minutes: 40 },
+      ],
+      [{ task_id: 2, status: "COMPLETED", duration_seconds: 1800 }],
+    );
+    expect(result.tasksAnalyzed).toBe(0);
+  });
+
+  it("sums completed sessions per task and ignores non-completed sessions", () => {
+    const result = computeEstimationCalibration(
+      [{ id: 1, is_completed: true, estimated_minutes: 30 }],
+      [
+        { task_id: 1, status: "COMPLETED", duration_seconds: 1800 },
+        { task_id: 1, status: "COMPLETED", duration_seconds: 1800 },
+        { task_id: 1, status: "ABANDONED", duration_seconds: 9999 },
+      ],
+    );
+    expect(result).toEqual({ ratio: 2, averageEstimateMinutes: 30, averageActualMinutes: 60, tasksAnalyzed: 1 });
+  });
+
+  it("falls back to actual_minutes when a task has no sessions", () => {
+    const result = computeEstimationCalibration(
+      [
+        { id: 1, is_completed: true, estimated_minutes: 60, actual_minutes: 30 },
+        { id: 2, is_completed: true, estimated_minutes: 60, actual_minutes: 60 },
+      ],
+      [],
+    );
+    expect(result.ratio).toBe(0.75);
+    expect(result.tasksAnalyzed).toBe(2);
   });
 });
